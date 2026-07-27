@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.chalk-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/dark-matter.png");
+  opacity: 0.03;
+}
+
+.paper-layer {
+  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.active-role {
+  background-color: #feb300 !important;
+  color: #000666 !important;
+  box-shadow: 0 4px 6px -1px rgba(126, 87, 0, 0.1), 0 2px 4px -1px rgba(126, 87, 0, 0.06);
+}
+
+.dotted-border {
+  background-image: linear-gradient(to right, #c6c5d4 33%, rgba(255, 255, 255, 0) 0%);
+  background-position: bottom;
+  background-size: 8px 1px;
+  background-repeat: repeat-x;
+}
+
+.chalkboard-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/dark-matter.png");
+  background-color: #1a237e;
+  /* Using primary container as base */
+}
+
+.card-shadow {
+  box-shadow: 0 4px 20px -2px rgba(0, 6, 102, 0.08);
+}
+
+.dotted-line {
+  background-image: radial-gradient(circle, #c6c5d4 1px, transparent 1px);
+  background-size: 8px 100%;
+  background-repeat: repeat-x;
+  height: 1px;
+  width: 100%;
+}
+
+@keyframes subtle-float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.float-anim {
+  animation: subtle-float 3s ease-in-out infinite;
+}
+
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

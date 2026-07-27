@@ -1,0 +1,95 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   // "STUDENT" | "TEACHER"
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  submissions Submission[]
+  createdAssignments Assignment[]
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  dueDate     DateTime
+  subject     String   // e.g. "Mathematics", "History", "Physics"
+  fileUrl     String?
+  fileName    String?
+  teacherId   String
+  teacher     User     @relation(fields: [teacherId], references: [id])
+  createdAt   DateTime @default(now())
+
+  submissions Submission[]
+}
+
+model Submission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id])
+  content      String     // Text submission content
+  submittedAt  DateTime   @default(now())
+  grade        String?    // e.g. "A+", "B", etc.
+  feedback     String?
+}
+
+model ClassSchedule {
+  id          String   @id @default(uuid())
+  subject     String
+  topic       String
+  startTime   String   // e.g. "09:00 AM"
+  endTime     String   // e.g. "10:00 AM"
+  room        String   // e.g. "Room 302"
+  dayOfWeek   String   // "Mon", "Tue", "Wed", "Thu", "Fri"
+  teacherName String
+}
+
+model Recording {
+  id             String   @id @default(uuid())
+  title          String
+  subject        String
+  instructorName String
+  duration       String   // e.g. "45:20"
+  views          Int      @default(0)
+  videoUrl       String
+  thumbnailUrl   String
+  createdAt      DateTime @default(now())
+}
+
+model LiveChat {
+  id         String   @id @default(uuid())
+  classId    String   @default("default-class")
+  senderId   String
+  senderName String
+  senderRole String   // "STUDENT" | "TEACHER"
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+model Attendance {
+  id              String   @id @default(uuid())
+  studentId       String
+  studentName     String
+  studentEmail    String
+  classId         String   @default("live-class")
+  className       String   @default("Live Class Session")
+  date            String   // e.g. "2026-07-22"
+  joinTime        DateTime @default(now())
+  status          String   @default("PRESENT") // "PRESENT", "LATE", "ABSENT"
+  durationMinutes Int      @default(0)
+  createdAt       DateTime @default(now())
+}
