@@ -12,7 +12,9 @@ export async function GET(request) {
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+  const host = request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
   const state = JSON.stringify({ role });

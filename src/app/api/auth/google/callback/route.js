@@ -7,7 +7,9 @@ export async function GET(request) {
   const stateRaw = searchParams.get('state');
   const error = searchParams.get('error');
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || origin;
+  const host = request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
 
   if (error || !code) {
     return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent(error || 'Google login was cancelled')}`);
@@ -31,7 +33,11 @@ export async function GET(request) {
     const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
     if (!clientId || !clientSecret) {
-      return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent('Google credentials missing')}`);
+      return NextResponse.redirect(
+        `${baseUrl}/login?error=${encodeURIComponent(
+          'Google credentials missing in Vercel environment variables. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Vercel Settings and redeploy.'
+        )}`
+      );
     }
 
     // Exchange authorization code for tokens
