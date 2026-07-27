@@ -10,7 +10,7 @@ generator client {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  password  String
+  password  String?
   name      String
   role      String   // "STUDENT" | "TEACHER"
   avatarUrl String?
