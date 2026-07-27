@@ -75,7 +75,7 @@ export default function LiveClassPage() {
     );
   }
 
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://paathshalla-learning-app-h1u4aeqq.livekit.cloud';
+  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://my-paathshalla-2mk1y57r.livekit.cloud';
 
   return (
     <LiveKitRoom

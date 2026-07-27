@@ -20,8 +20,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const apiKey = process.env.LIVEKIT_API_KEY;
-    const apiSecret = process.env.LIVEKIT_API_SECRET;
+    const apiKey = process.env.LIVEKIT_API_KEY || 'APIDi33ZJiP3exb';
+    const apiSecret = process.env.LIVEKIT_API_SECRET || '1m2pAR4D32sLqhv5Sf4FpyguYT5MvUFVLwzO9nZz3wL';
     if (!apiKey || !apiSecret) {
       return NextResponse.json({ error: 'Server configuration error: LiveKit credentials missing' }, { status: 500 });
     }
