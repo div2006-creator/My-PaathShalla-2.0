@@ -15,8 +15,8 @@ export async function GET(request) {
 
     if (search) {
       query.OR = [
-        { title: { contains: search } },
-        { instructorName: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { instructorName: { contains: search, mode: 'insensitive' } },
       ];
     }
 

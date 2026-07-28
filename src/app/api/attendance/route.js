@@ -18,8 +18,8 @@ export async function GET(request) {
     }
     if (search) {
       query.OR = [
-        { studentName: { contains: search } },
-        { studentEmail: { contains: search } },
+        { studentName: { contains: search, mode: 'insensitive' } },
+        { studentEmail: { contains: search, mode: 'insensitive' } },
       ];
     }
 

@@ -9,7 +9,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing email or password' }, { status: 400 });
     }
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !bcrypt.compareSync(password, user.password)) {
+    if (!user || !user.password || !bcrypt.compareSync(password, user.password)) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 400 });
     }
     const response = NextResponse.json({ 
