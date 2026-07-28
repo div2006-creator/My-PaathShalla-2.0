@@ -62,7 +62,7 @@ export default function ClientLayout({ children }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-screen bg-background">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 font-title-lg text-primary">Loading PaathShalla...</p>
+        <p className="mt-4 font-title-lg text-primary font-bold">Loading PaathShalla...</p>
       </div>
     );
   }
@@ -76,99 +76,198 @@ export default function ClientLayout({ children }) {
     );
   }
 
-  // Active live class on mobile might want full screen without top/bottom bars. Let's hide the bars on `/live` as well!
   const isLivePage = pathname === '/live';
+
+  const navItems = [
+    { href: '/dashboard', label: 'Overview', icon: 'dashboard' },
+    { href: '/schedule', label: 'Schedule', icon: 'calendar_today' },
+    { href: '/assignments', label: 'Assignments', icon: 'assignment' },
+    { href: '/recordings', label: 'Recordings', icon: 'videocam' },
+    { href: '/live', label: 'Live Gurukul', icon: 'sensors' },
+  ];
 
   return (
     <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
-      {/* Background Chalk Texture */}
+      {/* Background Texture */}
       <div className="fixed inset-0 pointer-events-none chalk-texture z-0"></div>
 
-      {/* Global Header */}
+      {/* Desktop Sidebar Navigation (Stitch Web Style) */}
       {!isLivePage && user && (
-        <header className="w-full sticky top-0 z-50 bg-background flex items-center justify-between px-container-margin py-stack-sm border-b border-outline-variant/10">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary overflow-hidden border-2 border-primary-container shrink-0">
-              <img 
-                className="w-full h-full object-cover" 
-                alt="User Avatar"
-                src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'} 
-              />
+        <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/60 flex-col gap-2 p-4 z-40 hidden md:flex">
+          {/* Logo & Brand Header */}
+          <div className="mb-6 px-3 pt-2 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md">
+              <span className="material-symbols-outlined text-2xl">school</span>
             </div>
             <div>
-              <h1 className="font-display-lg-mobile text-[18px] text-primary font-bold leading-tight">My PaathShalla</h1>
+              <h1 className="font-display-lg text-[20px] font-bold text-primary leading-tight">My Paathshala</h1>
+              <p className="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant opacity-75">Web Portal</p>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex-1 flex flex-col gap-1.5">
+            {navItems.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold transition-all duration-200 ${
+                    active
+                      ? 'bg-secondary-container text-on-secondary-container shadow-sm border border-secondary/20'
+                      : 'text-on-surface-variant hover:bg-surface-container-high hover:text-primary'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[22px]" style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}>
+                    {item.icon}
+                  </span>
+                  <span className="text-[14px] font-label-md">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Sidebar Footer User Card */}
+          <div className="mt-auto border-t border-outline-variant/60 pt-4 flex items-center justify-between px-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <img
+                className="w-10 h-10 rounded-full border border-outline-variant object-cover shrink-0"
+                alt={user.name}
+                src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'}
+              />
+              <div className="min-w-0">
+                <p className="font-bold text-[13px] text-primary truncate">{user.name}</p>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full inline-block">
+                  {user.role}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={logout}
+              className="text-on-surface-variant hover:text-error p-2 rounded-lg hover:bg-error-container/20 transition-colors"
+              title="Sign Out"
+            >
+              <span className="material-symbols-outlined text-[20px]">logout</span>
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* Desktop Top Header */}
+      {!isLivePage && user && (
+        <header className="hidden md:flex sticky top-0 z-30 bg-surface/80 backdrop-blur-md border-b border-outline-variant/60 ml-64 px-8 h-16 items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-on-surface-variant text-[13px] font-bold capitalize">
+              PaathShalla Portal &gt; <strong className="text-primary">{pathname.replace('/', '') || 'Dashboard'}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Link
+              href="/live"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-[13px] font-bold rounded-lg hover:bg-primary-container transition-all active:scale-95 shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">sensors</span>
+              <span>Live Classroom</span>
+            </Link>
+
+            <div className="h-6 w-px bg-outline-variant/60"></div>
+
+            <div className="flex items-center gap-2">
+              <img
+                className="w-8 h-8 rounded-full border border-outline-variant object-cover"
+                alt={user.name}
+                src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'}
+              />
+              <span className="font-bold text-[13px] text-primary">{user.name}</span>
+            </div>
+          </div>
+        </header>
+      )}
+
+      {/* Mobile Top Header */}
+      {!isLivePage && user && (
+        <header className="md:hidden w-full sticky top-0 z-50 bg-surface/90 backdrop-blur-md flex items-center justify-between px-4 py-3 border-b border-outline-variant/60">
+          <div className="flex items-center gap-3">
+            <img 
+              className="w-9 h-9 rounded-full object-cover border border-outline-variant" 
+              alt="User Avatar"
+              src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'} 
+            />
+            <div>
+              <h1 className="font-display-lg text-[16px] text-primary font-bold leading-tight">My Paathshala</h1>
               <p className="text-[10px] uppercase font-label-md text-on-surface-variant font-bold opacity-75">{user.role}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={logout}
-              className="text-primary hover:opacity-80 transition-opacity p-2 rounded-full hover:bg-surface-container active:scale-95 transition-transform duration-150 flex items-center justify-center"
+              className="text-primary p-2 rounded-full hover:bg-surface-container active:scale-95 transition-transform"
               title="Logout"
             >
               <span className="material-symbols-outlined text-[22px]">logout</span>
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center rounded-full text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform duration-150">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0" }}>notifications</span>
             </button>
           </div>
         </header>
       )}
 
-      {/* Main Content */}
-      <main className={`flex-1 relative z-10 ${isLivePage ? '' : 'pb-32'}`}>
-        {children}
+      {/* Main Content Area */}
+      <main className={`flex-1 relative z-10 ${isLivePage ? '' : 'md:ml-64 pb-28 md:pb-12'}`}>
+        <div className="max-w-[1280px] mx-auto">
+          {children}
+        </div>
       </main>
 
-      {/* Bottom Nav Bar */}
+      {/* Mobile Bottom Nav Bar */}
       {!isLivePage && user && (
-        <nav className="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-sm border-t border-outline-variant flex justify-around items-center px-2 pt-2 pb-8">
+        <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-lg border-t border-outline-variant flex justify-around items-center px-2 pt-2 pb-6">
           <Link 
             href="/dashboard"
-            className={`flex flex-col items-center justify-center px-4 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
               pathname === '/dashboard' 
                 ? 'bg-secondary-container text-on-secondary-container rounded-full' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/dashboard' ? "'FILL' 1" : "'FILL' 0" }}>home</span>
-            <span className="font-label-md text-label-md">Home</span>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/dashboard' ? "'FILL' 1" : "'FILL' 0" }}>dashboard</span>
+            <span className="font-label-md text-[11px]">Home</span>
           </Link>
-          
+
           <Link 
             href="/schedule"
-            className={`flex flex-col items-center justify-center px-4 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
               pathname === '/schedule' 
                 ? 'bg-secondary-container text-on-secondary-container rounded-full' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/schedule' ? "'FILL' 1" : "'FILL' 0" }}>school</span>
-            <span className="font-label-md text-label-md">Classes</span>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/schedule' ? "'FILL' 1" : "'FILL' 0" }}>calendar_today</span>
+            <span className="font-label-md text-[11px]">Schedule</span>
           </Link>
 
           <Link 
             href="/assignments"
-            className={`flex flex-col items-center justify-center px-4 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
               pathname === '/assignments' 
                 ? 'bg-secondary-container text-on-secondary-container rounded-full' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/assignments' ? "'FILL' 1" : "'FILL' 0" }}>assignment</span>
-            <span className="font-label-md text-label-md">Assignments</span>
+            <span className="font-label-md text-[11px]">Assignments</span>
           </Link>
 
           <Link 
             href="/recordings"
-            className={`flex flex-col items-center justify-center px-4 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
               pathname === '/recordings' 
                 ? 'bg-secondary-container text-on-secondary-container rounded-full' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
             <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/recordings' ? "'FILL' 1" : "'FILL' 0" }}>videocam</span>
-            <span className="font-label-md text-label-md">Recordings</span>
+            <span className="font-label-md text-[11px]">Recordings</span>
           </Link>
         </nav>
       )}

@@ -92,7 +92,7 @@ export default function RecordingsPage() {
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {recordings.length > 0 ? (
               recordings.map((video) => (
                 <div 
