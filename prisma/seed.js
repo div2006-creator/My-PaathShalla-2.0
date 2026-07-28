@@ -1,7 +1,14 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
-const prisma = new PrismaClient();
+const dbUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mypaathshalla?schema=public';
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: dbUrl,
+    },
+  },
+});
 
 async function main() {
   console.log('Clearing database and seeding clean state...');
