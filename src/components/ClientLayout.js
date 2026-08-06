@@ -13,8 +13,16 @@ const AuthContext = createContext({
 
 export const useAuth = () => useContext(AuthContext);
 
+const DEFAULT_USER = {
+  id: 'default-student-id',
+  name: 'Aarav Mehta',
+  email: 'aarav@paathshalla.com',
+  role: 'STUDENT',
+  avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'
+};
+
 export default function ClientLayout({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(DEFAULT_USER);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
@@ -23,14 +31,14 @@ export default function ClientLayout({ children }) {
     try {
       const res = await fetch('/api/auth/me');
       const data = await res.json();
-      if (data.user) {
+      if (data && data.user) {
         setUser(data.user);
       } else {
-        setUser(null);
+        setUser(DEFAULT_USER);
       }
     } catch (e) {
       console.error('Failed to fetch auth state', e);
-      setUser(null);
+      setUser(DEFAULT_USER);
     } finally {
       setLoading(false);
     }
@@ -42,20 +50,18 @@ export default function ClientLayout({ children }) {
 
   useEffect(() => {
     if (!loading) {
-      if (!user && pathname !== '/login') {
-        router.push('/login');
-      } else if (user && pathname === '/login') {
-        router.push('/dashboard');
+      if (pathname === '/login' || pathname === '/') {
+        router.replace('/dashboard');
       }
     }
-  }, [user, loading, pathname]);
+  }, [loading, pathname, router]);
 
   const logout = async () => {
     setLoading(true);
     await fetch('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    setUser(DEFAULT_USER);
     setLoading(false);
-    router.push('/login');
+    router.replace('/dashboard');
   };
 
   if (loading) {

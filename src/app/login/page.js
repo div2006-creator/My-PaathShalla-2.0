@@ -16,14 +16,8 @@ export default function LoginPage() {
   const { refreshUser } = useAuth();
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const urlError = params.get('error');
-      if (urlError) {
-        setError(urlError);
-      }
-    }
-  }, []);
+    router.replace('/dashboard');
+  }, [router]);
 
   const handleToggleRole = (selectedRole) => {
     setRole(selectedRole);
