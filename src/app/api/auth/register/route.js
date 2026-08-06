@@ -8,16 +8,21 @@ export async function POST(request) {
     if (!name || !email || !password || !role) {
       return NextResponse.json({ error: 'Missing registration details' }, { status: 400 });
     }
-    const existing = await prisma.user.findUnique({ where: { email } });
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email: cleanEmail } });
     if (existing) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
     }
+
     const hashedPassword = bcrypt.hashSync(password, 10);
     const userRole = role.toUpperCase();
+
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: cleanEmail,
         password: hashedPassword,
         role: userRole,
         avatarUrl: userRole === 'STUDENT'
@@ -25,6 +30,7 @@ export async function POST(request) {
           : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBEIqpGngz3OzOf8MycyD8ZTLaDZj8xnjPRgVCZo_BCUhWDa3NIwBcaPKmokKyPL3S6SodrJ3k00KCV4brCXT5ZODgYFVbg3X5NVrYVXepnv9EzVEIq5VYzof4V0nQ2U0Kl0Rh5iR1IrGbovbIcR8JIP8VLtCkerslMF_GhMwDxYkiUm3IDBx7uK-3jrrf1ZMr1A5tAG27dHjI1ivlvZL3X2TIWsMvoDSbYK_5eOWi9pld8R8wdqGn2UyFfzFG9BFwb9l6BAqLpWEc'
       }
     });
+
     const response = NextResponse.json({ 
       user: { 
         id: user.id, 
@@ -34,14 +40,20 @@ export async function POST(request) {
         avatarUrl: user.avatarUrl
       } 
     });
+
     response.cookies.set('userId', user.id, {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     });
+
     return response;
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Registration error:', error);
+    const errorMessage = error?.code || error?.name?.includes('Prisma') 
+      ? 'Database error. Please check database connection.'
+      : (error.message || 'An error occurred during registration');
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

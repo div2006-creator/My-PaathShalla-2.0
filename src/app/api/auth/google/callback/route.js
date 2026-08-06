@@ -68,16 +68,18 @@ export async function GET(request) {
       throw new Error('Could not retrieve user email from Google');
     }
 
+    const cleanEmail = googleUser.email.trim().toLowerCase();
+
     // Find or create user in database
     let user = await prisma.user.findUnique({
-      where: { email: googleUser.email },
+      where: { email: cleanEmail },
     });
 
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: googleUser.email,
-          name: googleUser.name || googleUser.email.split('@')[0],
+          email: cleanEmail,
+          name: googleUser.name || cleanEmail.split('@')[0],
           role: role,
           avatarUrl: googleUser.picture || null,
         },
