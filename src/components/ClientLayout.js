@@ -56,6 +56,22 @@ export default function ClientLayout({ children }) {
     }
   }, [loading, pathname, router]);
 
+  const toggleRole = () => {
+    setUser((prev) => {
+      const isTeacher = prev?.role === 'TEACHER';
+      const newRole = isTeacher ? 'STUDENT' : 'TEACHER';
+      return {
+        id: isTeacher ? 'default-student-id' : 'default-teacher-id',
+        name: isTeacher ? 'Aarav Mehta' : 'Prof. Rajesh Varma',
+        email: isTeacher ? 'aarav@paathshalla.com' : 'varma@paathshalla.com',
+        role: newRole,
+        avatarUrl: isTeacher
+          ? 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'
+          : 'https://lh3.googleusercontent.com/aida-public/AB6AXuBEIqpGngz3OzOf8MycyD8ZTLaDZj8xnjPRgVCZo_BCUhWDa3NIwBcaPKmokKyPL3S6SodrJ3k00KCV4brCXT5ZODgYFVbg3X5NVrYVXepnv9EzVEIq5VYzof4V0nQ2U0Kl0Rh5iR1IrGbovbIcR8JIP8VLtCkerslMF_GhMwDxYkiUm3IDBx7uK-3jrrf1ZMr1A5tAG27dHjI1ivlvZL3X2TIWsMvoDSbYK_5eOWi9pld8R8wdqGn2UyFfzFG9BFwb9l6BAqLpWEc'
+      };
+    });
+  };
+
   const logout = async () => {
     setLoading(true);
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -76,7 +92,7 @@ export default function ClientLayout({ children }) {
   // Login page has no shell
   if (pathname === '/login') {
     return (
-      <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
+      <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole }}>
         {children}
       </AuthContext.Provider>
     );
@@ -93,7 +109,7 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole }}>
       {/* Background Texture */}
       <div className="fixed inset-0 pointer-events-none chalk-texture z-0"></div>
 
@@ -135,27 +151,30 @@ export default function ClientLayout({ children }) {
           </nav>
 
           {/* Sidebar Footer User Card */}
-          <div className="mt-auto border-t border-outline-variant/60 pt-4 flex items-center justify-between px-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <img
-                className="w-10 h-10 rounded-full border border-outline-variant object-cover shrink-0"
-                alt={user.name}
-                src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'}
-              />
-              <div className="min-w-0">
-                <p className="font-bold text-[13px] text-primary truncate">{user.name}</p>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full inline-block">
-                  {user.role}
-                </span>
+          <div className="mt-auto border-t border-outline-variant/60 pt-4 flex flex-col gap-3 px-2">
+            <button
+              onClick={toggleRole}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-xl border border-secondary/30 hover:scale-[0.98] transition-all"
+            >
+              <span className="material-symbols-outlined text-base">swap_horiz</span>
+              <span>{user.role === 'TEACHER' ? 'Switch to Student' : 'Switch to Teacher'}</span>
+            </button>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  className="w-10 h-10 rounded-full border border-outline-variant object-cover shrink-0"
+                  alt={user.name}
+                  src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'}
+                />
+                <div className="min-w-0">
+                  <p className="font-bold text-[13px] text-primary truncate">{user.name}</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full inline-block">
+                    {user.role}
+                  </span>
+                </div>
               </div>
             </div>
-            <button
-              onClick={logout}
-              className="text-on-surface-variant hover:text-error p-2 rounded-lg hover:bg-error-container/20 transition-colors"
-              title="Sign Out"
-            >
-              <span className="material-symbols-outlined text-[20px]">logout</span>
-            </button>
           </div>
         </aside>
       )}
@@ -170,6 +189,14 @@ export default function ClientLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleRole}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary-container text-on-secondary-container text-[12px] font-bold border border-secondary/30 hover:scale-[0.98] transition-all shadow-sm"
+            >
+              <span className="material-symbols-outlined text-[16px]">swap_horiz</span>
+              <span>{user.role === 'TEACHER' ? 'Switch to Student View' : 'Switch to Teacher View'}</span>
+            </button>
+
             <Link
               href="/live"
               className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary text-[13px] font-bold rounded-lg hover:bg-primary-container transition-all active:scale-95 shadow-sm"
@@ -208,11 +235,11 @@ export default function ClientLayout({ children }) {
           </div>
           <div className="flex items-center gap-2">
             <button 
-              onClick={logout}
-              className="text-primary p-2 rounded-full hover:bg-surface-container active:scale-95 transition-transform"
-              title="Logout"
+              onClick={toggleRole}
+              className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
             >
-              <span className="material-symbols-outlined text-[22px]">logout</span>
+              <span className="material-symbols-outlined text-sm">swap_horiz</span>
+              <span>{user.role === 'TEACHER' ? 'Student' : 'Teacher'}</span>
             </button>
           </div>
         </header>

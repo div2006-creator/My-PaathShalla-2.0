@@ -7,11 +7,23 @@ import { useAuth } from '@/components/ClientLayout';
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const router = useRouter();
+  const [roleOverride, setRoleOverride] = useState(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlRole = params.get('role');
+      if (urlRole) {
+        setRoleOverride(urlRole.toUpperCase());
+      }
+    }
+  }, []);
 
   if (!user) return null;
 
-  return user.role === 'TEACHER' ? <TeacherDashboard user={user} /> : <StudentDashboard user={user} />;
+  const currentRole = roleOverride || user.role;
+
+  return currentRole === 'TEACHER' ? <TeacherDashboard user={user} /> : <StudentDashboard user={user} />;
 }
 
 // ================= STUDENT DASHBOARD (STITCH WEB THEME) =================
