@@ -63,15 +63,17 @@ export default function SchedulePage() {
         }),
       });
 
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.class) {
         setTopic('');
         setModalOpen(false);
         await fetchSchedule();
       } else {
-        alert('Failed to schedule class');
+        alert(data.error || 'Failed to schedule class');
       }
     } catch (err) {
       console.error(err);
+      alert('Error scheduling class. Please try again.');
     } finally {
       setSubmitting(false);
     }
