@@ -128,9 +128,18 @@ export default function SchedulePage() {
       <section className="mt-stack-lg px-container-margin pb-8">
         <div className="flex items-center justify-between mb-stack-md">
           <h3 className="font-title-lg text-title-lg text-on-surface font-bold">Class Schedule</h3>
-          <span className="font-label-md text-label-md text-secondary bg-secondary-fixed-dim/20 px-3 py-1 rounded-full font-bold">
-            {schedule.length} {schedule.length === 1 ? 'Class' : 'Classes'}
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setModalOpen(true)}
+              className="px-4 py-2 bg-primary text-on-primary font-bold text-xs rounded-xl flex items-center gap-1.5 hover:bg-primary-container transition-all active:scale-95 shadow-sm"
+            >
+              <span className="material-symbols-outlined text-base">add</span>
+              <span>Schedule Class</span>
+            </button>
+            <span className="font-label-md text-label-md text-secondary bg-secondary-fixed-dim/20 px-3 py-1 rounded-full font-bold">
+              {schedule.length} {schedule.length === 1 ? 'Class' : 'Classes'}
+            </span>
+          </div>
         </div>
 
         {loading ? (
