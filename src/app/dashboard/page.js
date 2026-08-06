@@ -76,12 +76,12 @@ function StudentDashboard({ user }) {
   const upcomingClasses = schedule.filter(c => c.id !== liveClass?.id);
 
   return (
-    <div className="p-6 md:p-8 space-y-8 animate-fade-in-up">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
       
       {/* Welcome Header */}
       <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/60 pb-6">
         <div>
-          <h2 className="text-3xl font-bold font-display text-primary tracking-tight">Welcome back, {user.name}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold font-display text-primary tracking-tight">Welcome back, {user.name}</h2>
           <p className="text-on-surface-variant font-body-md text-base mt-1">
             You have completed <strong className="text-primary">{completionRate}%</strong> of your course assignments.
           </p>
@@ -496,14 +496,14 @@ function TeacherDashboard({ user }) {
   });
 
   return (
-    <div className="p-6 md:p-8 space-y-8 animate-fade-in-up">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
       {/* Header */}
       <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/60 pb-6">
         <div>
           <span className="text-xs font-bold tracking-wider uppercase text-secondary font-label-md bg-secondary-container/20 px-2.5 py-1 rounded">
             Teacher Portal
           </span>
-          <h2 className="text-3xl font-bold font-display text-primary tracking-tight mt-2">Welcome back, {user.name}</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold font-display text-primary tracking-tight mt-2">Welcome back, {user.name}</h2>
           <p className="text-on-surface-variant font-body-md text-base mt-1">Manage your active classes and review student submissions.</p>
         </div>
         <div className="flex items-center gap-3">

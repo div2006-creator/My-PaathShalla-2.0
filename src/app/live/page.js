@@ -240,62 +240,64 @@ function PaathShallaLiveClass({ user }) {
       </header>
 
       {/* Main UI */}
-      <main className="flex-1 flex relative overflow-hidden p-4 md:p-6 gap-6 min-h-0">
+      <main className="flex-1 flex flex-col lg:flex-row relative overflow-hidden p-2 sm:p-4 md:p-6 gap-4 md:gap-6 min-h-0">
         
         {/* Video Stage */}
-        <div className="flex-grow flex flex-col gap-6 relative min-w-0">
+        <div className="flex-grow flex flex-col gap-3 sm:gap-6 relative min-w-0 h-full">
           
           {/* LiveKit grid container */}
-          <div className="flex-1 bg-inverse-surface rounded-3xl overflow-hidden relative shadow-lg p-4 flex flex-wrap justify-center items-center gap-4 bg-[radial-gradient(#2d3133_1px,transparent_1px)] [background-size:16px_16px]">
+          <div className="flex-1 bg-inverse-surface rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-lg p-2 sm:p-4 flex flex-wrap justify-center items-center gap-3 sm:gap-4 bg-[radial-gradient(#2d3133_1px,transparent_1px)] [background-size:16px_16px]">
             {tracks.length > 0 ? (
               tracks.map((trackReference) => (
-                <div key={trackReference.participant.sid + trackReference.source} className="w-full max-w-sm md:max-w-md aspect-video bg-black rounded-2xl overflow-hidden border border-outline/20 relative shadow">
+                <div key={trackReference.participant.sid + trackReference.source} className="w-full max-w-full sm:max-w-md md:max-w-lg aspect-video bg-black rounded-xl sm:rounded-2xl overflow-hidden border border-outline/20 relative shadow">
                   <ParticipantTile trackRef={trackReference} />
                 </div>
               ))
             ) : (
-              <div className="text-white text-center">
-                <span className="material-symbols-outlined text-6xl animate-pulse text-outline mb-2">videocam_off</span>
-                <p className="font-bold">No active video streams yet</p>
-                <p className="text-outline text-label-md">Waiting for participants to publish feeds...</p>
+              <div className="text-white text-center p-4">
+                <span className="material-symbols-outlined text-5xl sm:text-6xl animate-pulse text-outline mb-2">videocam_off</span>
+                <p className="font-bold text-sm sm:text-base">No active video streams yet</p>
+                <p className="text-outline text-xs sm:text-label-md mt-1">Camera feeds will appear here centered in 16:9 HD framing</p>
               </div>
             )}
           </div>
 
           {/* Controls Bar */}
-          <div className="h-20 bg-surface-container-lowest rounded-2xl flex items-center justify-between px-6 shadow-sm border border-outline-variant/10 shrink-0">
-            <div className="flex items-center gap-3">
+          <div className="h-16 sm:h-20 bg-surface-container-lowest rounded-xl sm:rounded-2xl flex items-center justify-between px-3 sm:px-6 shadow-sm border border-outline-variant/10 shrink-0 gap-2 overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               <button 
                 onClick={() => localParticipant?.setMicrophoneEnabled(!isMicrophoneEnabled)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
                   isMicrophoneEnabled ? 'bg-surface-container-high hover:bg-outline-variant' : 'bg-error text-white'
                 }`}
+                title={isMicrophoneEnabled ? 'Mute Mic' : 'Unmute Mic'}
               >
-                <span className="material-symbols-outlined">{isMicrophoneEnabled ? 'mic' : 'mic_off'}</span>
+                <span className="material-symbols-outlined text-lg sm:text-2xl">{isMicrophoneEnabled ? 'mic' : 'mic_off'}</span>
               </button>
               <button 
                 onClick={() => localParticipant?.setCameraEnabled(!isCameraEnabled)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
                   isCameraEnabled ? 'bg-surface-container-high hover:bg-outline-variant' : 'bg-error text-white'
                 }`}
+                title={isCameraEnabled ? 'Turn Off Camera' : 'Turn On Camera'}
               >
-                <span className="material-symbols-outlined">{isCameraEnabled ? 'videocam' : 'videocam_off'}</span>
+                <span className="material-symbols-outlined text-lg sm:text-2xl">{isCameraEnabled ? 'videocam' : 'videocam_off'}</span>
               </button>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               {/* Teacher Recording Button */}
               {user.role === 'TEACHER' && (
                 <button 
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  className={`px-4 h-12 rounded-full flex items-center justify-center gap-2 font-bold transition-all ${
+                  className={`px-3 sm:px-4 h-10 sm:h-12 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm transition-all ${
                     isRecording 
                       ? 'bg-red-600 text-white animate-pulse shadow-lg' 
                       : 'bg-surface-container-high text-primary hover:bg-outline-variant'
                   }`}
                   title={isRecording ? 'Stop Recording' : 'Start Class Recording'}
                 >
-                  <span className="material-symbols-outlined" style={{ fontVariationSettings: isRecording ? "'FILL' 1" : "'FILL' 0" }}>
+                  <span className="material-symbols-outlined text-base sm:text-xl" style={{ fontVariationSettings: isRecording ? "'FILL' 1" : "'FILL' 0" }}>
                     {isRecording ? 'stop_circle' : 'radio_button_checked'}
                   </span>
                   <span className="hidden sm:inline">{isRecording ? 'Stop Rec' : 'Record Class'}</span>
@@ -304,31 +306,32 @@ function PaathShallaLiveClass({ user }) {
 
               <button 
                 onClick={() => setHandRaised(!handRaised)}
-                className={`px-5 h-12 rounded-full flex items-center justify-center gap-2 font-bold transition-all ${
+                className={`px-3 sm:px-5 h-10 sm:h-12 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm transition-all ${
                   handRaised 
                     ? 'bg-secondary text-white border border-secondary' 
                     : 'bg-secondary-container text-on-secondary-container shadow shadow-black/10 hover:opacity-90 active:scale-95'
                 }`}
               >
-                <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>front_hand</span>
+                <span className="material-symbols-outlined text-base sm:text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>front_hand</span>
                 <span className="hidden sm:inline">{handRaised ? 'Lower Hand' : 'Raise Hand'}</span>
               </button>
               <button 
                 onClick={() => setChatOpen(!chatOpen)}
-                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
                   chatOpen ? 'bg-primary text-white' : 'bg-surface-container-high hover:bg-outline-variant'
                 }`}
+                title="Toggle Class Chat"
               >
-                <span className="material-symbols-outlined">forum</span>
+                <span className="material-symbols-outlined text-lg sm:text-2xl">forum</span>
               </button>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center shrink-0">
               <button 
                 onClick={handleLeaveClass}
-                className="px-6 h-12 rounded-xl flex items-center justify-center gap-2 bg-error text-on-error font-bold hover:bg-on-error-container transition-colors active:scale-95"
+                className="px-4 sm:px-6 h-10 sm:h-12 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 bg-error text-on-error font-bold text-xs sm:text-sm hover:bg-on-error-container transition-colors active:scale-95"
               >
-                <span className="material-symbols-outlined">call_end</span>
+                <span className="material-symbols-outlined text-base sm:text-xl">call_end</span>
                 <span className="hidden sm:inline">Leave</span>
               </button>
             </div>
@@ -336,9 +339,9 @@ function PaathShallaLiveClass({ user }) {
 
         </div>
 
-        {/* Dynamic Chat Sidebar */}
+        {/* Dynamic Chat Sidebar / Mobile Bottom Sheet */}
         {chatOpen && (
-          <aside className="w-80 bg-surface-container-lowest border border-outline-variant rounded-3xl flex flex-col shadow-xl overflow-hidden shrink-0 h-full paper-layer">
+          <aside className="w-full lg:w-80 fixed inset-x-0 bottom-0 top-16 z-50 lg:relative lg:top-0 lg:z-auto bg-surface-container-lowest border border-outline-variant rounded-t-3xl lg:rounded-3xl flex flex-col shadow-2xl overflow-hidden shrink-0 h-[75vh] lg:h-full paper-layer">
             <div className="p-4 border-b border-outline-variant flex items-center justify-between shrink-0">
               <h3 className="font-title-lg text-primary font-bold">Class Chat</h3>
               <button onClick={() => setChatOpen(false)} className="material-symbols-outlined text-outline hover:text-primary transition-colors">

@@ -73,3 +73,44 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ================= LIVEKIT CAMERA FEED & FRAMING FIXES ================= */
+.lk-participant-tile {
+  width: 100% !important;
+  height: 100% !important;
+  background-color: #000 !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.lk-participant-tile video,
+.lk-video-container video,
+.lk-focus-layout video,
+video.lk-video,
+video {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: inherit !important;
+}
+
+/* Local participant camera mirror effect for natural angle */
+.lk-participant-tile[data-lk-local-participant="true"] video,
+[data-lk-local-participant="true"] video {
+  transform: scaleX(-1) !important;
+}
+
+/* Participant tile overlay & audio indicator positioning */
+.lk-participant-metadata,
+.lk-participant-placeholder {
+  z-index: 10 !important;
+}
+
+/* Responsive Container Paddings */
+@media (max-width: 640px) {
+  .px-container-margin {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+}
