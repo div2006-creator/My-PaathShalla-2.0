@@ -214,168 +214,211 @@ function PaathShallaLiveClass({ user }) {
   };
 
   return (
-    <div className="bg-background text-on-background overflow-hidden h-screen flex flex-col relative z-10 animate-fade-in-up">
-      {/* Header */}
-      <header className="w-full bg-background flex items-center justify-between px-container-margin py-stack-sm h-16 border-b border-outline-variant/10 shrink-0">
+    <div className="bg-[#121212] text-white overflow-hidden h-screen flex flex-col relative z-10 animate-fade-in-up">
+      {/* Google Meet Dark Top Header */}
+      <header className="w-full bg-[#1e1e1e] flex items-center justify-between px-4 sm:px-6 h-14 border-b border-white/10 shrink-0">
         <div className="flex items-center gap-3">
-          <button onClick={handleLeaveClass} className="material-symbols-outlined text-primary hover:opacity-80 transition-opacity">
-            arrow_back
+          <button onClick={handleLeaveClass} className="p-1.5 rounded-full hover:bg-white/10 text-white transition-colors" title="Leave Class">
+            <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <h1 className="font-headline-md-mobile text-[16px] md:text-[20px] text-primary font-bold truncate max-w-[200px] md:max-w-md">
-            Active Classroom Session
-          </h1>
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+            <h1 className="text-sm sm:text-base text-white font-bold truncate max-w-[180px] sm:max-w-md">
+              Live Gurukul Class Session
+            </h1>
+          </div>
         </div>
+
         <div className="flex items-center gap-3">
           {isRecording && (
-            <div className="flex items-center gap-2 bg-red-600/10 text-red-600 px-3 py-1 rounded-full border border-red-600/20 shrink-0 font-bold">
-              <span className="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></span>
-              <span className="font-label-md text-[11px] uppercase tracking-wider">REC {formatTime(recordingSeconds)}</span>
+            <div className="flex items-center gap-2 bg-red-600/20 text-red-400 px-3 py-1 rounded-full border border-red-500/30 shrink-0 font-bold text-xs">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+              <span>REC {formatTime(recordingSeconds)}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 bg-error-container text-on-error-container px-3 py-1 rounded-full border border-error/20 shrink-0">
-            <span className="w-2 h-2 bg-error rounded-full animate-pulse"></span>
-            <span className="font-label-md text-[10px] md:text-label-md uppercase tracking-wider font-bold">Live Room Connected</span>
+          <div className="flex items-center gap-2 bg-white/10 text-white px-3 py-1 rounded-full text-xs font-semibold">
+            <span className="material-symbols-outlined text-sm text-green-400">group</span>
+            <span>{tracks.length || 1} Connected</span>
           </div>
         </div>
       </header>
 
-      {/* Main UI */}
-      <main className="flex-1 flex flex-col lg:flex-row relative overflow-hidden p-2 sm:p-4 md:p-6 gap-4 md:gap-6 min-h-0">
+      {/* Main Google Meet UI */}
+      <main className="flex-1 flex flex-col lg:flex-row relative overflow-hidden p-3 sm:p-4 gap-4 min-h-0">
         
-        {/* Video Stage */}
-        <div className="flex-grow flex flex-col gap-3 sm:gap-6 relative min-w-0 h-full">
+        {/* Video Stage Container */}
+        <div className="flex-grow flex flex-col gap-3 relative min-w-0 h-full">
           
-          {/* LiveKit grid container */}
-          <div className="flex-1 bg-inverse-surface rounded-2xl sm:rounded-3xl overflow-hidden relative shadow-lg p-2 sm:p-4 flex flex-wrap justify-center items-center gap-3 sm:gap-4 bg-[radial-gradient(#2d3133_1px,transparent_1px)] [background-size:16px_16px]">
+          {/* Google Meet Stage Grid */}
+          <div className="flex-1 bg-[#18181b] rounded-2xl overflow-hidden relative shadow-2xl p-2 sm:p-3 flex items-center justify-center border border-white/10">
             {tracks.length > 0 ? (
-              tracks.map((trackReference) => (
-                <div key={trackReference.participant.sid + trackReference.source} className="w-full max-w-full sm:max-w-md md:max-w-lg aspect-video bg-black rounded-xl sm:rounded-2xl overflow-hidden border border-outline/20 relative shadow">
-                  <ParticipantTile trackRef={trackReference} />
-                </div>
-              ))
+              <div className={`w-full h-full grid gap-3 ${
+                tracks.length === 1 
+                  ? 'grid-cols-1 grid-rows-1' 
+                  : tracks.length === 2 
+                    ? 'grid-cols-1 md:grid-cols-2 grid-rows-1 md:grid-rows-1' 
+                    : 'grid-cols-2 grid-rows-2'
+              }`}>
+                {tracks.map((trackReference) => {
+                  const isMe = trackReference.participant?.identity === user.id;
+                  const nameLabel = isMe ? 'You' : (trackReference.participant?.name || 'Participant');
+                  
+                  return (
+                    <div 
+                      key={trackReference.participant.sid + trackReference.source} 
+                      className="google-meet-tile relative w-full h-full bg-[#202124] rounded-2xl overflow-hidden border border-white/10 flex items-center justify-center shadow-lg"
+                    >
+                      <ParticipantTile trackRef={trackReference} />
+                      
+                      {/* Google Meet Participant Name Tag */}
+                      <div className="absolute bottom-3 left-3 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-semibold flex items-center gap-2 z-20 border border-white/10 shadow-md">
+                        <span className="material-symbols-outlined text-sm text-green-400">mic</span>
+                        <span>{nameLabel}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             ) : (
-              <div className="text-white text-center p-4">
-                <span className="material-symbols-outlined text-5xl sm:text-6xl animate-pulse text-outline mb-2">videocam_off</span>
-                <p className="font-bold text-sm sm:text-base">No active video streams yet</p>
-                <p className="text-outline text-xs sm:text-label-md mt-1">Camera feeds will appear here centered in 16:9 HD framing</p>
+              <div className="text-white text-center p-6 flex flex-col items-center justify-center">
+                <div className="w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary mb-3">
+                  <span className="material-symbols-outlined text-5xl">videocam_off</span>
+                </div>
+                <h3 className="font-bold text-base text-white">No active camera streams</h3>
+                <p className="text-gray-400 text-xs mt-1">Turn on your camera to start broadcasting video</p>
               </div>
             )}
           </div>
 
-          {/* Controls Bar */}
-          <div className="h-16 sm:h-20 bg-surface-container-lowest rounded-xl sm:rounded-2xl flex items-center justify-between px-3 sm:px-6 shadow-sm border border-outline-variant/10 shrink-0 gap-2 overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Floating Google Meet Controls Bar */}
+          <div className="h-16 bg-[#202124] rounded-2xl flex items-center justify-between px-4 sm:px-6 shadow-2xl border border-white/10 shrink-0 gap-3 overflow-x-auto no-scrollbar">
+            
+            {/* Left Controls: Audio / Video */}
+            <div className="flex items-center gap-3 shrink-0">
               <button 
                 onClick={() => localParticipant?.setMicrophoneEnabled(!isMicrophoneEnabled)}
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
-                  isMicrophoneEnabled ? 'bg-surface-container-high hover:bg-outline-variant' : 'bg-error text-white'
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                  isMicrophoneEnabled 
+                    ? 'bg-[#3c4043] hover:bg-[#4a4e52] text-white' 
+                    : 'bg-[#ea4335] text-white shadow-lg'
                 }`}
-                title={isMicrophoneEnabled ? 'Mute Mic' : 'Unmute Mic'}
+                title={isMicrophoneEnabled ? 'Turn Off Microphone' : 'Turn On Microphone'}
               >
-                <span className="material-symbols-outlined text-lg sm:text-2xl">{isMicrophoneEnabled ? 'mic' : 'mic_off'}</span>
+                <span className="material-symbols-outlined text-xl">{isMicrophoneEnabled ? 'mic' : 'mic_off'}</span>
               </button>
+              
               <button 
                 onClick={() => localParticipant?.setCameraEnabled(!isCameraEnabled)}
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
-                  isCameraEnabled ? 'bg-surface-container-high hover:bg-outline-variant' : 'bg-error text-white'
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                  isCameraEnabled 
+                    ? 'bg-[#3c4043] hover:bg-[#4a4e52] text-white' 
+                    : 'bg-[#ea4335] text-white shadow-lg'
                 }`}
                 title={isCameraEnabled ? 'Turn Off Camera' : 'Turn On Camera'}
               >
-                <span className="material-symbols-outlined text-lg sm:text-2xl">{isCameraEnabled ? 'videocam' : 'videocam_off'}</span>
+                <span className="material-symbols-outlined text-xl">{isCameraEnabled ? 'videocam' : 'videocam_off'}</span>
               </button>
             </div>
             
-            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-              {/* Teacher Recording Button */}
+            {/* Center Controls: Raise Hand / Record / Chat */}
+            <div className="flex items-center gap-3 shrink-0">
               {user.role === 'TEACHER' && (
                 <button 
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  className={`px-3 sm:px-4 h-10 sm:h-12 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm transition-all ${
+                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
                     isRecording 
-                      ? 'bg-red-600 text-white animate-pulse shadow-lg' 
-                      : 'bg-surface-container-high text-primary hover:bg-outline-variant'
+                      ? 'bg-[#ea4335] text-white animate-pulse shadow-lg' 
+                      : 'bg-[#3c4043] hover:bg-[#4a4e52] text-white'
                   }`}
-                  title={isRecording ? 'Stop Recording' : 'Start Class Recording'}
+                  title={isRecording ? 'Stop Class Recording' : 'Start Class Recording'}
                 >
-                  <span className="material-symbols-outlined text-base sm:text-xl" style={{ fontVariationSettings: isRecording ? "'FILL' 1" : "'FILL' 0" }}>
+                  <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: isRecording ? "'FILL' 1" : "'FILL' 0" }}>
                     {isRecording ? 'stop_circle' : 'radio_button_checked'}
                   </span>
-                  <span className="hidden sm:inline">{isRecording ? 'Stop Rec' : 'Record Class'}</span>
                 </button>
               )}
 
               <button 
                 onClick={() => setHandRaised(!handRaised)}
-                className={`px-3 sm:px-5 h-10 sm:h-12 rounded-full flex items-center justify-center gap-1.5 sm:gap-2 font-bold text-xs sm:text-sm transition-all ${
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
                   handRaised 
-                    ? 'bg-secondary text-white border border-secondary' 
-                    : 'bg-secondary-container text-on-secondary-container shadow shadow-black/10 hover:opacity-90 active:scale-95'
+                    ? 'bg-[#fbbc04] text-black font-bold shadow-lg' 
+                    : 'bg-[#3c4043] hover:bg-[#4a4e52] text-white'
                 }`}
+                title={handRaised ? 'Lower Hand' : 'Raise Hand'}
               >
-                <span className="material-symbols-outlined text-base sm:text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>front_hand</span>
-                <span className="hidden sm:inline">{handRaised ? 'Lower Hand' : 'Raise Hand'}</span>
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>front_hand</span>
               </button>
+
               <button 
                 onClick={() => setChatOpen(!chatOpen)}
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${
-                  chatOpen ? 'bg-primary text-white' : 'bg-surface-container-high hover:bg-outline-variant'
+                className={`w-11 h-11 rounded-full flex items-center justify-center transition-all ${
+                  chatOpen 
+                    ? 'bg-[#8ab4f8] text-black font-bold shadow-lg' 
+                    : 'bg-[#3c4043] hover:bg-[#4a4e52] text-white'
                 }`}
-                title="Toggle Class Chat"
+                title="Class In-Call Messages"
               >
-                <span className="material-symbols-outlined text-lg sm:text-2xl">forum</span>
+                <span className="material-symbols-outlined text-xl">chat</span>
               </button>
             </div>
 
+            {/* Right Control: End Call */}
             <div className="flex items-center shrink-0">
               <button 
                 onClick={handleLeaveClass}
-                className="px-4 sm:px-6 h-10 sm:h-12 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 bg-error text-on-error font-bold text-xs sm:text-sm hover:bg-on-error-container transition-colors active:scale-95"
+                className="px-5 py-2.5 bg-[#ea4335] text-white rounded-full font-bold text-xs sm:text-sm hover:bg-red-700 active:scale-95 transition-all flex items-center gap-2 shadow-lg"
+                title="Leave Meeting"
               >
-                <span className="material-symbols-outlined text-base sm:text-xl">call_end</span>
+                <span className="material-symbols-outlined text-lg">call_end</span>
                 <span className="hidden sm:inline">Leave</span>
               </button>
             </div>
+
           </div>
 
         </div>
 
-        {/* Dynamic Chat Sidebar / Mobile Bottom Sheet */}
+        {/* Google Meet Right-side Chat Panel */}
         {chatOpen && (
-          <aside className="w-full lg:w-80 fixed inset-x-0 bottom-0 top-16 z-50 lg:relative lg:top-0 lg:z-auto bg-surface-container-lowest border border-outline-variant rounded-t-3xl lg:rounded-3xl flex flex-col shadow-2xl overflow-hidden shrink-0 h-[75vh] lg:h-full paper-layer">
-            <div className="p-4 border-b border-outline-variant flex items-center justify-between shrink-0">
-              <h3 className="font-title-lg text-primary font-bold">Class Chat</h3>
-              <button onClick={() => setChatOpen(false)} className="material-symbols-outlined text-outline hover:text-primary transition-colors">
-                close
+          <aside className="w-full lg:w-80 fixed inset-x-0 bottom-0 top-14 z-50 lg:relative lg:top-0 lg:z-auto bg-[#202124] border border-white/10 rounded-t-3xl lg:rounded-2xl flex flex-col shadow-2xl overflow-hidden shrink-0 h-[75vh] lg:h-full">
+            <div className="p-4 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#28292c]">
+              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                <span className="material-symbols-outlined text-base text-[#8ab4f8]">chat</span>
+                <span>In-Call Messages</span>
+              </h3>
+              <button onClick={() => setChatOpen(false)} className="text-gray-400 hover:text-white transition-colors">
+                <span className="material-symbols-outlined text-xl">close</span>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 min-h-0">
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 min-h-0 bg-[#1e1e1e]">
               {chats.map((chat) => {
                 const isMe = chat.senderId === user.id;
                 const isTeacher = chat.senderRole === 'TEACHER';
 
                 return (
-                  <div key={chat.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white ${
-                      isTeacher ? 'bg-primary-container' : isMe ? 'bg-secondary' : 'bg-surface-tint'
+                  <div key={chat.id} className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white ${
+                      isTeacher ? 'bg-[#fbbc04] text-black' : isMe ? 'bg-[#8ab4f8] text-black' : 'bg-[#3c4043]'
                     }`}>
                       {chat.senderName.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <div className={`flex flex-col gap-0.5 max-w-[70%] ${isMe ? 'items-end' : ''}`}>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`font-label-md font-bold text-[11px] ${isTeacher ? 'text-primary' : 'text-on-surface'}`}>
+                    <div className={`flex flex-col gap-0.5 max-w-[80%] ${isMe ? 'items-end' : ''}`}>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`font-semibold text-[11px] ${isTeacher ? 'text-[#fbbc04]' : isMe ? 'text-[#8ab4f8]' : 'text-gray-300'}`}>
                           {chat.senderName}
                         </span>
-                        <span className="text-[9px] text-outline">
+                        <span className="text-[9px] text-gray-400">
                           {new Date(chat.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <div className={`p-3 rounded-xl text-body-md border ${
-                        isTeacher 
-                          ? 'bg-primary/5 border-primary/10 border-l-4 border-l-primary' 
-                          : isMe 
-                            ? 'bg-secondary-container/20 border-secondary-container/30' 
-                            : 'bg-surface-container-low border-outline-variant/30'
+                      <div className={`p-2.5 rounded-2xl text-xs text-white ${
+                        isMe 
+                          ? 'bg-[#8ab4f8]/20 border border-[#8ab4f8]/30 text-white' 
+                          : isTeacher 
+                            ? 'bg-[#fbbc04]/10 border border-[#fbbc04]/30 text-white' 
+                            : 'bg-[#3c4043] border border-white/10'
                       }`}>
                         {chat.message}
                       </div>
@@ -386,17 +429,17 @@ function PaathShallaLiveClass({ user }) {
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-4 bg-surface-container-low border-t border-outline-variant/30 shrink-0">
+            <div className="p-3 bg-[#28292c] border-t border-white/10 shrink-0">
               <form onSubmit={handleSendChat} className="relative flex items-center">
                 <input 
-                  className="w-full bg-surface-container-lowest border border-outline-variant rounded-full py-3 pl-4 pr-12 focus:outline-none focus:border-primary focus:ring-0 text-body-md" 
-                  placeholder="Type a message..." 
+                  className="w-full bg-[#3c4043] border border-white/10 rounded-full py-2.5 pl-4 pr-10 focus:outline-none focus:border-[#8ab4f8] text-xs text-white placeholder-gray-400" 
+                  placeholder="Send a message to everyone..." 
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                 />
-                <button type="submit" className="absolute right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white hover:opacity-90 active:scale-90 transition-all">
-                  <span className="material-symbols-outlined text-[16px] text-white">send</span>
+                <button type="submit" className="absolute right-2 w-7 h-7 bg-[#8ab4f8] rounded-full flex items-center justify-center text-black hover:opacity-90 active:scale-90 transition-all">
+                  <span className="material-symbols-outlined text-[15px] text-black">send</span>
                 </button>
               </form>
             </div>
