@@ -134,6 +134,25 @@ video {
   z-index: 10 !important;
 }
 
+/* Floating Emoji Reactions Animation (Google Meet feature) */
+@keyframes reactionFloat {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-280px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+.reaction-particle {
+  animation: reactionFloat 2.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
 /* Responsive Container Paddings */
 @media (max-width: 640px) {
   .px-container-margin {
