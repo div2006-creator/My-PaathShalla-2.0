@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useParticipants } from '@livekit/components-react';
 
 export default function SidebarPanel({
   user,
@@ -15,27 +16,15 @@ export default function SidebarPanel({
   const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'qna' | 'polls' | 'notes' | 'resources' | 'participants'
   const chatEndRef = useRef(null);
 
+  // Real LiveKit Participants
+  const liveParticipants = useParticipants();
+
   // Q&A State
-  const [questions, setQuestions] = useState([
-    { id: 1, author: 'Aarav Mehta', text: 'Does this integral formula apply when x is negative?', upvotes: 4, answered: true, answer: 'Yes, provided x is within the real domain.' },
-    { id: 2, author: 'Ananya Sharma', text: 'Can we re-watch the calculus recording after class?', upvotes: 7, answered: false }
-  ]);
+  const [questions, setQuestions] = useState([]);
   const [newQuestion, setNewQuestion] = useState('');
 
   // Polls State
-  const [polls, setPolls] = useState([
-    {
-      id: 1,
-      question: 'What is the integral ∫ x² dx ?',
-      options: [
-        { text: 'x³/3 + C', votes: 12 },
-        { text: '2x + C', votes: 2 },
-        { text: 'x³ + C', votes: 1 }
-      ],
-      totalVotes: 15,
-      active: true
-    }
-  ]);
+  const [polls, setPolls] = useState([]);
   const [selectedPollOption, setSelectedPollOption] = useState(null);
   const [votedPollId, setVotedPollId] = useState(null);
 
@@ -47,86 +36,128 @@ export default function SidebarPanel({
 
   // Shared Notes State
   const [notesText, setNotesText] = useState(
-    '# Class Lecture Notes: Calculus & Limits\n\n1. Fundamental Theorem of Calculus\n2. Integration by Parts: ∫ u dv = uv - ∫ v du\n3. Substitution Method for Definite Integrals'
+    '# Class Lecture Notes\n\n1. Real-time collaborative notes taken during class session.\n2. Summaries and equations saved by instructor and students.'
   );
 
   // Shared Resources State
   const [resources] = useState([
-    { id: 1, name: 'Calculus_Limits_Chapter4.pdf', size: '2.4 MB', type: 'PDF' },
-    { id: 2, name: 'Integration_Formula_Cheatsheet.pdf', size: '1.1 MB', type: 'PDF' },
-    { id: 3, name: 'Calculus_Practice_Problems.zip', size: '4.8 MB', type: 'ZIP' }
+    { id: 'res-1', name: 'Class_Lecture_Slides.pdf', size: '2.4 MB', type: 'PDF' },
+    { id: 'res-2', name: 'Formula_Cheatsheet.pdf', size: '1.1 MB', type: 'PDF' }
   ]);
 
-  // Participants State
+  // Participants Search State
   const [searchMember, setSearchMember] = useState('');
   const [studentMicsDisabled, setStudentMicsDisabled] = useState(false);
   const [studentCamsDisabled, setStudentCamsDisabled] = useState(false);
 
-  const members = [
-    { id: 't1', name: 'Prof. Rajesh Varma', role: 'TEACHER', isMuted: false, isCamOff: false, hand: false },
-    { id: 's1', name: 'Aarav Mehta (You)', role: 'STUDENT', isMuted: false, isCamOff: false, hand: false },
-    { id: 's2', name: 'Ananya Sharma', role: 'STUDENT', isMuted: true, isCamOff: false, hand: true },
-    { id: 's3', name: 'Rohan Gupta', role: 'STUDENT', isMuted: true, isCamOff: true, hand: false },
-    { id: 's4', name: 'Priya Singh', role: 'STUDENT', isMuted: false, isCamOff: false, hand: false }
-  ];
+  // Fetch Q&A from backend
+  const fetchQna = async () => {
+    try {
+      const res = await fetch('/api/live/qna');
+      const data = await res.json();
+      if (data.questions) setQuestions(data.questions);
+    } catch (e) {
+      console.error('Fetch QnA failed:', e);
+    }
+  };
+
+  // Fetch Polls from backend
+  const fetchPolls = async () => {
+    try {
+      const res = await fetch('/api/live/polls');
+      const data = await res.json();
+      if (data.polls) setPolls(data.polls);
+    } catch (e) {
+      console.error('Fetch Polls failed:', e);
+    }
+  };
+
+  useEffect(() => {
+    fetchQna();
+    fetchPolls();
+    const interval = setInterval(() => {
+      fetchQna();
+      fetchPolls();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chats, activeTab]);
 
-  // Submit Q&A Question
-  const handleAddQuestion = (e) => {
+  // Submit Q&A Question to Backend API
+  const handleAddQuestion = async (e) => {
     e.preventDefault();
     if (!newQuestion.trim()) return;
-    setQuestions([
-      ...questions,
-      { id: Date.now(), author: user.name, text: newQuestion, upvotes: 1, answered: false }
-    ]);
+    const text = newQuestion;
     setNewQuestion('');
+    try {
+      const res = await fetch('/api/live/qna', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ author: user.name || 'Student', text }),
+      });
+      if (res.ok) fetchQna();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Upvote Q&A Question
-  const handleUpvoteQuestion = (qId) => {
-    setQuestions(questions.map((q) => q.id === qId ? { ...q, upvotes: q.upvotes + 1 } : q));
+  // Upvote Q&A Question via Backend API
+  const handleUpvoteQuestion = async (qId) => {
+    try {
+      const res = await fetch('/api/live/qna', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: qId, action: 'upvote' }),
+      });
+      if (res.ok) fetchQna();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Vote on Poll
-  const handleVotePoll = (pollId, optionIdx) => {
+  // Vote on Poll via Backend API
+  const handleVotePoll = async (pollId, optionIdx) => {
     if (votedPollId === pollId) return;
-    setPolls(polls.map((p) => {
-      if (p.id === pollId) {
-        const updatedOptions = [...p.options];
-        updatedOptions[optionIdx].votes += 1;
-        return { ...p, options: updatedOptions, totalVotes: p.totalVotes + 1 };
-      }
-      return p;
-    }));
     setVotedPollId(pollId);
     setSelectedPollOption(optionIdx);
+    try {
+      const res = await fetch('/api/live/polls', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pollId, optionIndex: optionIdx }),
+      });
+      if (res.ok) fetchPolls();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Create Poll (Teacher)
-  const handleCreatePoll = (e) => {
+  // Create Poll (Teacher) via Backend API
+  const handleCreatePoll = async (e) => {
     e.preventDefault();
     if (!pollQuestionInput || !pollOption1 || !pollOption2) return;
-    const newPollObj = {
-      id: Date.now(),
-      question: pollQuestionInput,
-      options: [
-        { text: pollOption1, votes: 0 },
-        { text: pollOption2, votes: 0 }
-      ],
-      totalVotes: 0,
-      active: true
-    };
-    setPolls([newPollObj, ...polls]);
+    const q = pollQuestionInput;
+    const opts = [pollOption1, pollOption2];
     setPollQuestionInput('');
     setPollOption1('');
     setPollOption2('');
     setCreatePollOpen(false);
+    try {
+      const res = await fetch('/api/live/polls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, options: opts }),
+      });
+      if (res.ok) fetchPolls();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  // Download Lecture Notes
+  // Export Notes
   const handleDownloadNotes = () => {
     const element = document.createElement('a');
     const file = new Blob([notesText], { type: 'text/markdown' });
@@ -137,7 +168,21 @@ export default function SidebarPanel({
     document.body.removeChild(element);
   };
 
-  const filteredMembers = members.filter((m) =>
+  // Build Real Room Participants
+  const realMembers = liveParticipants.length > 0 
+    ? liveParticipants.map(p => ({
+        id: p.sid || p.identity,
+        name: p.identity === user.id ? 'You (' + (p.name || user.name) + ')' : (p.name || p.identity || 'Participant'),
+        role: (p.metadata?.includes('TEACHER') || p.identity === user.id && user.role === 'TEACHER') ? 'TEACHER' : 'STUDENT',
+        isMuted: !p.isMicrophoneEnabled,
+        isCamOff: !p.isCameraEnabled,
+        hand: false
+      }))
+    : [
+        { id: user.id, name: user.name + ' (You)', role: user.role, isMuted: false, isCamOff: false, hand: false }
+      ];
+
+  const filteredMembers = realMembers.filter((m) =>
     m.name.toLowerCase().includes(searchMember.toLowerCase())
   );
 
@@ -396,7 +441,7 @@ export default function SidebarPanel({
         </div>
       )}
 
-      {/* TAB 6: PARTICIPANTS & TEACHER CONTROLS */}
+      {/* TAB 6: REAL ROOM PARTICIPANTS & TEACHER CONTROLS */}
       {activeTab === 'participants' && (
         <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 space-y-3 text-xs overflow-y-auto">
           {user.role === 'TEACHER' && (
@@ -458,7 +503,6 @@ export default function SidebarPanel({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {m.hand && <span className="text-sm">🖐️</span>}
                   <span className={`material-symbols-outlined text-sm ${m.isMuted ? 'text-red-400' : 'text-green-400'}`}>
                     {m.isMuted ? 'mic_off' : 'mic'}
                   </span>
