@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/ClientLayout';
-import { LiveKitRoom, useTracks, useLocalParticipant } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, useTracks, useLocalParticipant } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import '@livekit/components-styles';
 
@@ -95,6 +95,7 @@ export default function LiveClassPage() {
       data-lk-theme="default"
     >
       <PaathShallaLiveClass user={user} />
+      <RoomAudioRenderer />
     </LiveKitRoom>
   );
 }
