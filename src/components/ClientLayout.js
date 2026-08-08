@@ -144,12 +144,16 @@ export default function ClientLayout({ children }) {
         <aside className="h-screen w-64 fixed left-0 top-0 bg-surface-container-lowest border-r border-outline-variant/60 flex-col gap-2 p-4 z-40 hidden md:flex">
           {/* Logo & Brand Header */}
           <div className="mb-6 px-3 pt-2 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold shadow-md">
-              <span className="material-symbols-outlined text-2xl">school</span>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#5a4bda] to-[#3b30c6] flex items-center justify-center text-white font-extrabold shadow-md text-lg tracking-tighter">
+              PW
             </div>
             <div>
-              <h1 className="font-display-lg text-[20px] font-bold text-primary leading-tight">My Paathshala</h1>
-              <p className="text-[10px] font-bold tracking-wider uppercase text-on-surface-variant opacity-75">Web Portal</p>
+              <div className="flex items-center gap-1.5">
+                <h1 className="font-display-lg text-[18px] font-extrabold text-[#5a4bda] leading-tight">PW Paathshala</h1>
+              </div>
+              <span className="text-[9px] font-extrabold tracking-wider uppercase bg-[#ffb800] text-black px-1.5 py-0.5 rounded shadow-sm">
+                Target JEE / NEET
+              </span>
             </div>
           </div>
 
@@ -264,15 +268,13 @@ export default function ClientLayout({ children }) {
       {/* Mobile Top Header */}
       {!isLivePage && user && (
         <header className="md:hidden w-full sticky top-0 z-50 bg-surface/90 backdrop-blur-md flex items-center justify-between px-4 py-3 border-b border-outline-variant/60">
-          <div className="flex items-center gap-3">
-            <img 
-              className="w-9 h-9 rounded-full object-cover border border-outline-variant" 
-              alt="User Avatar"
-              src={user.avatarUrl || 'https://lh3.googleusercontent.com/aida-public/AB6AXuDRJuoa4ZjJi6DzALX5w9OeEoNtUbctFr7-e0SduAVKfsOoGBRcHudjPIRma1pB2w1MYPrRIp0HADuSy25gUlLi0TzdtpuEPyuDMheP5iYk2qici4koa1Z-m9UotZaX7lvdXzC_0F1k3RmxBreJ5LaBujZV939kfWNmZWui3nGmA5deh4C4-O79NJzzokDcArTkzfZfO8dTnYSi6jNN_DMSWotKCU-DdLjgAMwRJ1_ElLhidits700p6muU1wupLtym0112dSCj740'} 
-            />
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#5a4bda] to-[#3b30c6] flex items-center justify-center text-white font-extrabold text-sm tracking-tighter shadow-sm">
+              PW
+            </div>
             <div>
-              <h1 className="font-display-lg text-[16px] text-primary font-bold leading-tight">My Paathshala</h1>
-              <p className="text-[10px] uppercase font-label-md text-on-surface-variant font-bold opacity-75">{user.role}</p>
+              <h1 className="font-display-lg text-[15px] text-[#5a4bda] font-extrabold leading-tight">PW Paathshala</h1>
+              <span className="text-[8px] font-extrabold uppercase bg-[#ffb800] text-black px-1 rounded">JEE / NEET</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
