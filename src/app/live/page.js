@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/ClientLayout';
-import { LiveKitRoom, RoomAudioRenderer, useTracks, useLocalParticipant } from '@livekit/components-react';
-import { Track } from 'livekit-client';
+import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
 import '@livekit/components-styles';
 
 // Modular Live Classroom Components
@@ -20,14 +19,27 @@ import LiveQuizModal from '@/components/live/LiveQuizModal';
 // Main Page Component
 export default function LiveClassPage() {
   const { user } = useAuth();
-  const [token, setToken] = useState('');
-  const [roomName, setRoomName] = useState('paathshalla-class');
-  const [classSubject, setClassSubject] = useState('Mathematics 101');
-  const [classTopic, setClassTopic] = useState('Integral Calculus & Limits');
-  const [connecting, setConnecting] = useState(true);
-  const [error, setError] = useState('');
   const router = useRouter();
 
+  const [activeRoom, setActiveRoom] = useState(null);
+  const [token, setToken] = useState('');
+  const [classSubject, setClassSubject] = useState('Mathematics');
+  const [classTopic, setClassTopic] = useState('Live Class Session');
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState('');
+
+  // Schedule Lobby States
+  const [schedule, setSchedule] = useState([]);
+  const [loadingSchedule, setLoadingSchedule] = useState(true);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // Form states for creating a new scheduled live class
+  const [newSubject, setNewSubject] = useState('Mathematics');
+  const [newTopic, setNewTopic] = useState('');
+  const [newTime, setNewTime] = useState('10:00 AM - 11:00 AM');
+  const [newRoom, setNewRoom] = useState('Live Room A');
+
+  // Check URL parameters on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -35,16 +47,44 @@ export default function LiveClassPage() {
       const urlSubject = params.get('subject');
       const urlTopic = params.get('topic');
 
-      if (urlRoom) setRoomName(urlRoom);
       if (urlSubject) setClassSubject(urlSubject);
       if (urlTopic) setClassTopic(urlTopic);
+
+      if (urlRoom) {
+        setActiveRoom(urlRoom);
+      }
     }
   }, []);
 
+  // Fetch schedule for the lobby
+  const fetchSchedule = async () => {
+    setLoadingSchedule(true);
+    try {
+      const res = await fetch('/api/schedule');
+      const data = await res.json();
+      setSchedule(data.schedule || []);
+    } catch (e) {
+      console.error(e);
+      setSchedule([]);
+    } fontFinally();
+  };
+
+  function fontFinally() {
+    setLoadingSchedule(false);
+  }
+
+  useEffect(() => {
+    fetchSchedule();
+  }, []);
+
+  // Fetch LiveKit token when an active room is selected
   useEffect(() => {
     async function getToken() {
+      if (!activeRoom) return;
+      setConnecting(true);
+      setError('');
       try {
-        const res = await fetch(`/api/live/token?room=${roomName}`);
+        const res = await fetch(`/api/live/token?room=${encodeURIComponent(activeRoom)}`);
         const data = await res.json();
         if (data.token) {
           setToken(data.token);
@@ -54,7 +94,7 @@ export default function LiveClassPage() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 className: classSubject + ' - ' + classTopic,
-                classId: roomName,
+                classId: activeRoom,
               }),
             }).catch((err) => console.error('Auto attendance failed:', err));
           }
@@ -67,57 +107,274 @@ export default function LiveClassPage() {
         setConnecting(false);
       }
     }
-    if (user) {
+    if (user && activeRoom) {
       getToken();
     }
-  }, [user, roomName, classSubject, classTopic]);
+  }, [user, activeRoom, classSubject, classTopic]);
+
+  const handleStartClass = (item) => {
+    setClassSubject(item.subject);
+    setClassTopic(item.topic);
+    setActiveRoom(item.id || item.room || 'live-class-' + Date.now());
+  };
+
+  const handleCreateScheduleClass = async (e) => {
+    e.preventDefault();
+    if (!newTopic.trim()) return;
+
+    try {
+      const res = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: newSubject,
+          topic: newTopic,
+          startTime: newTime.split('-')[0]?.trim() || '10:00 AM',
+          endTime: newTime.split('-')[1]?.trim() || '11:00 AM',
+          room: newRoom,
+          dayOfWeek: 'Today',
+          teacherName: user?.name || 'Faculty Instructor',
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSchedule([data.class, ...schedule]);
+        setNewTopic('');
+        setCreateModalOpen(false);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   if (!user) return null;
 
-  if (connecting) {
+  // 1. IF ACTIVE ROOM IS SELECTED -> RENDER LIVEKIT WEBRTC STAGE
+  if (activeRoom) {
+    if (connecting) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white space-y-4">
+          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-extrabold text-sm text-red-400 tracking-wide">Connecting to Live Classroom Stage...</p>
+          <p className="text-xs text-slate-400 font-bold">{classSubject} • {classTopic}</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-950 p-4 text-center text-white space-y-3">
+          <span className="material-symbols-outlined text-red-500 text-6xl">error</span>
+          <h2 className="text-xl font-bold text-white">Failed to Join Classroom</h2>
+          <p className="text-slate-400 text-xs max-w-md">{error}</p>
+          <button 
+            onClick={() => setActiveRoom(null)}
+            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs active:scale-95 transition-transform"
+          >
+            Return to Scheduled Classes Lobby
+          </button>
+        </div>
+      );
+    }
+
+    const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://my-paathshalla-2mk1y57r.livekit.cloud';
+
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#121212] text-white">
-        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 font-bold text-sm text-indigo-400">Connecting to PaathShalla Live Classroom...</p>
-      </div>
+      <LiveKitRoom
+        token={token}
+        serverUrl={serverUrl}
+        connect={true}
+        video={true}
+        audio={true}
+        data-lk-theme="default"
+      >
+        <PaathShallaLiveClass 
+          user={user} 
+          classSubject={classSubject} 
+          classTopic={classTopic}
+          onLeaveRoom={() => setActiveRoom(null)} 
+        />
+        <RoomAudioRenderer />
+      </LiveKitRoom>
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-[#121212] p-4 text-center text-white">
-        <span className="material-symbols-outlined text-red-500 text-6xl mb-4">error</span>
-        <h2 className="text-xl font-bold text-white">Failed to Join Classroom</h2>
-        <p className="text-gray-400 text-xs mt-2 max-w-md">{error}</p>
-        <button 
-          onClick={() => router.push('/dashboard')}
-          className="mt-6 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold active:scale-95 transition-transform"
-        >
-          Return to Dashboard
-        </button>
-      </div>
-    );
-  }
-
-  const serverUrl = process.env.NEXT_PUBLIC_LIVEKIT_URL || 'wss://my-paathshalla-2mk1y57r.livekit.cloud';
+  // 2. IF NO ACTIVE ROOM IS SELECTED -> RENDER SCHEDULED LIVE CLASSES LOBBY
+  const isTeacher = user.role === 'TEACHER';
 
   return (
-    <LiveKitRoom
-      token={token}
-      serverUrl={serverUrl}
-      connect={true}
-      video={true}
-      audio={true}
-      data-lk-theme="default"
-    >
-      <PaathShallaLiveClass user={user} classSubject={classSubject} classTopic={classTopic} />
-      <RoomAudioRenderer />
-    </LiveKitRoom>
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      
+      {/* Lobby Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div>
+          <span className="text-[10px] font-extrabold uppercase bg-red-500/20 text-red-400 px-2.5 py-1 rounded border border-red-500/30">
+            Live Classroom Stage
+          </span>
+          <h1 className="text-2xl font-extrabold text-white font-display mt-1">Scheduled Live Classes</h1>
+          <p className="text-xs text-slate-400">Select a scheduled live session below to start or join the WebRTC classroom</p>
+        </div>
+
+        {isTeacher && (
+          <button
+            onClick={() => setCreateModalOpen(true)}
+            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 active:scale-95 transition-all self-start sm:self-auto"
+          >
+            <span className="material-symbols-outlined text-base">add_circle</span>
+            <span>Schedule Live Class</span>
+          </button>
+        )}
+      </div>
+
+      {/* Scheduled Classes Feed Grid */}
+      <div className="space-y-4">
+        {loadingSchedule ? (
+          <div className="p-12 text-center text-slate-400 space-y-2">
+            <div className="w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-xs font-bold text-slate-300">Loading scheduled live classes...</p>
+          </div>
+        ) : schedule.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {schedule.map((item) => (
+              <div 
+                key={item.id} 
+                className="bg-slate-900 border border-slate-800 hover:border-red-500/50 p-5 rounded-2xl shadow-md space-y-4 transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/30 rounded text-[10px] font-extrabold uppercase">
+                      {item.dayOfWeek || 'Today'} • {item.startTime} - {item.endTime}
+                    </span>
+                    <span className="text-xs font-bold text-amber-400">{item.subject}</span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-extrabold text-white font-display">{item.topic}</h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Faculty: <strong className="text-slate-200">{item.teacherName || 'Faculty Instructor'}</strong> • Location: {item.room}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-800/80 flex justify-between items-center">
+                  <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    Ready for Broadcast
+                  </span>
+
+                  <button
+                    onClick={() => handleStartClass(item)}
+                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-sm">sensors</span>
+                    <span>{isTeacher ? 'START LIVE CLASS' : 'JOIN LIVE CLASS'}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-slate-900 border border-slate-800 p-12 rounded-2xl text-center space-y-3">
+            <span className="material-symbols-outlined text-slate-600 text-5xl">sensors_off</span>
+            <h3 className="text-base font-bold text-white">No live classes scheduled right now.</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              {isTeacher
+                ? 'Create your first scheduled live class to start teaching your students.'
+                : 'Check back soon! Your teachers will schedule live classes here.'}
+            </p>
+            {isTeacher && (
+              <button
+                onClick={() => setCreateModalOpen(true)}
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-1.5"
+              >
+                <span className="material-symbols-outlined text-base">add_circle</span>
+                <span>Schedule Live Class Now</span>
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Schedule Live Class Modal (Teacher) */}
+      {createModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4 text-white">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <h3 className="font-bold text-red-400 text-base">Schedule New Live Class</h3>
+              <button onClick={() => setCreateModalOpen(false)} className="text-slate-400 hover:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleCreateScheduleClass} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Subject</label>
+                <select
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
+                  value={newSubject}
+                  onChange={(e) => setNewSubject(e.target.value)}
+                >
+                  <option>Mathematics</option>
+                  <option>Physics</option>
+                  <option>Chemistry</option>
+                  <option>Computer Science</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Lecture Topic</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Binary Search Trees & Graph Traversals"
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
+                  value={newTopic}
+                  onChange={(e) => setNewTopic(e.target.value)}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Scheduled Time</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="10:00 AM - 11:00 AM"
+                    className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Room / Lab</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Live Room A"
+                    className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
+                    value={newRoom}
+                    onChange={(e) => setNewRoom(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md mt-2"
+              >
+                Schedule & Create Live Class
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }
 
 // Custom Classroom UI Component
-function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTopic = "Integral Calculus & Limits" }) {
+function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic = "Live Class Session", onLeaveRoom }) {
   const router = useRouter();
 
   // Classroom Feature States
@@ -127,12 +384,8 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
   const [handRaised, setHandRaised] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [reactionsList, setReactionsList] = useState([]);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
-  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
-  const [quizOpen, setQuizOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [layoutMode, setLayoutMode] = useState('grid');
   const [captionsEnabled, setCaptionsEnabled] = useState(false);
 
@@ -140,12 +393,9 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [recordingTitle, setRecordingTitle] = useState('Mathematics Live Class - Calculus & Limits');
-  const [recordingSubject, setRecordingSubject] = useState('Mathematics');
+  const [recordingTitle, setRecordingTitle] = useState(`${classSubject}: ${classTopic}`);
+  const [recordingSubject, setRecordingSubject] = useState(classSubject);
   const [savingRecording, setSavingRecording] = useState(false);
-
-  // LiveKit hooks
-  const { localParticipant, isMicrophoneEnabled, isCameraEnabled } = useLocalParticipant();
 
   useEffect(() => {
     let timer;
@@ -201,299 +451,145 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
     }
   };
 
-  // Screen Share Handler
-  const handleToggleScreenShare = async () => {
-    try {
-      const newState = !isScreenSharing;
-      await localParticipant?.setScreenShareEnabled(newState);
-      setIsScreenSharing(newState);
-    } catch (err) {
-      console.error('Screen share toggle:', err);
-      setIsScreenSharing(!isScreenSharing);
-    }
-  };
-
-  // Emoji Reaction Handler
-  const handleSendReaction = (emoji) => {
-    const newReaction = {
-      id: Date.now() + Math.random(),
-      emoji,
-      left: Math.floor(Math.random() * 60) + 20,
-    };
-    setReactionsList((prev) => [...prev, newReaction]);
-    setTimeout(() => {
-      setReactionsList((prev) => prev.filter((r) => r.id !== newReaction.id));
-    }, 2500);
-  };
-
-  // Fullscreen Handler
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-      document.exitFullscreen().catch(() => {});
-    }
-    setMoreMenuOpen(false);
-  };
-
-  // LiveKit tracks
-  const tracks = useTracks([
-    { source: Track.Source.Camera, withPlaceholder: true },
-    { source: Track.Source.ScreenShare, withPlaceholder: false }
-  ]);
-
-  // Sync Live Chat
-  const fetchChats = async () => {
-    try {
-      const res = await fetch('/api/live-chat');
-      const data = await res.json();
-      setChats(data.chats || []);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchChats();
-    const interval = setInterval(fetchChats, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSendChat = async (e) => {
+  const handleSendChat = (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-    const msg = chatInput;
+    setChats([
+      ...chats,
+      {
+        sender: user.name,
+        role: user.role,
+        text: chatInput,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
     setChatInput('');
-    try {
-      const res = await fetch('/api/live-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg }),
-      });
-      if (res.ok) fetchChats();
-    } catch (err) {
-      console.error(err);
-    }
   };
 
-  const handleLeaveClass = () => {
-    if (confirm('Are you sure you want to leave the live classroom?')) {
+  const handleLeave = () => {
+    if (onLeaveRoom) {
+      onLeaveRoom();
+    } else {
       router.push('/dashboard');
     }
   };
 
   return (
-    <div className="bg-[#121212] text-white overflow-hidden h-screen flex flex-col relative z-10">
+    <div className="flex flex-col h-screen bg-[#0F172A] overflow-hidden text-white font-sans">
       
-      {/* Floating Animated Reactions */}
-      <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
-        {reactionsList.map((r) => (
-          <div
-            key={r.id}
-            className="absolute bottom-20 text-4xl reaction-particle"
-            style={{ left: `${r.left}%` }}
-          >
-            {r.emoji}
-          </div>
-        ))}
-      </div>
-
-      {/* 1. CLASSROOM HEADER */}
-      <ClassroomHeader 
+      {/* 1. TOP CLASSROOM HEADER */}
+      <ClassroomHeader
         courseTitle={classSubject}
         topicName={classTopic}
         isLive={true}
         isRecording={isRecording}
         recordingSeconds={recordingSeconds}
-        participantCount={tracks.length > 0 ? tracks.length : 14}
-        networkQuality="5G HD (60 FPS)"
-        teacherName="Prof. Rajesh Varma"
+        participantCount={1}
+        teacherName={user.role === 'TEACHER' ? user.name : 'Faculty Instructor'}
         isLocked={isLocked}
         onToggleLock={() => setIsLocked(!isLocked)}
         onOpenSettings={() => setSettingsOpen(true)}
-        onToggleFullscreen={handleToggleFullscreen}
-        onLeaveClass={handleLeaveClass}
+        onToggleFullscreen={() => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        }}
+        onLeaveClass={handleLeave}
         userRole={user.role}
       />
 
-      {/* 2. MAIN CLASSROOM STAGE */}
-      <main className="flex-1 flex flex-col lg:flex-row relative overflow-hidden p-3 sm:p-4 gap-4 min-h-0">
-        
-        {/* Stage Container */}
-        <div className="flex-grow flex flex-col gap-3 relative min-w-0 h-full">
-          
-          {/* Subtitles Banner */}
-          {captionsEnabled && (
-            <div className="absolute top-4 inset-x-8 z-30 pointer-events-none flex justify-center">
-              <div className="bg-black/85 backdrop-blur-md border border-white/10 px-5 py-2 rounded-xl text-center text-xs sm:text-sm text-amber-400 font-medium shadow-2xl max-w-xl">
-                <span className="text-gray-400 font-bold mr-2">[Live Captions]:</span>
-                "Welcome to today's Calculus lecture. Please open your books to page 142."
-              </div>
-            </div>
-          )}
+      {/* 2. MAIN STAGE CONTENT (VIDEO GRID + SIDEBAR) */}
+      <div className="flex-1 flex overflow-hidden relative">
+        <VideoGrid
+          layoutMode={layoutMode}
+          isScreenSharing={isScreenSharing}
+          captionsEnabled={captionsEnabled}
+          user={user}
+        />
 
-          {/* Video Grid Component */}
-          <VideoGrid 
-            tracks={tracks}
-            userRole={user.role}
-            userId={user.id}
-            isScreenSharing={isScreenSharing}
-            handRaised={handRaised}
-            layoutMode={layoutMode}
-          />
-
-          {/* More Options Menu (⋮) */}
-          {moreMenuOpen && (
-            <div className="absolute bottom-20 right-6 sm:right-24 z-40 bg-[#28292c] border border-white/10 py-2 w-56 rounded-2xl shadow-2xl text-xs flex flex-col text-white">
-              <button 
-                onClick={handleToggleFullscreen}
-                className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left"
-              >
-                <span className="material-symbols-outlined text-base">fullscreen</span>
-                <span>Toggle Fullscreen</span>
-              </button>
-              
-              <button 
-                onClick={() => { setQuizOpen(true); setMoreMenuOpen(false); }}
-                className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left"
-              >
-                <span className="material-symbols-outlined text-base">quiz</span>
-                <span>Launch MCQ Quiz</span>
-              </button>
-              
-              <button 
-                onClick={() => { setCaptionsEnabled(!captionsEnabled); setMoreMenuOpen(false); }}
-                className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left"
-              >
-                <span className="material-symbols-outlined text-base">closed_caption</span>
-                <span>{captionsEnabled ? 'Turn Off Captions' : 'Turn On Live Captions'}</span>
-              </button>
-
-              <button 
-                onClick={() => { setSettingsOpen(true); setMoreMenuOpen(false); }}
-                className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left border-t border-white/10"
-              >
-                <span className="material-symbols-outlined text-base">settings</span>
-                <span>Audio & Video Settings</span>
-              </button>
-            </div>
-          )}
-
-          {/* 3. FLOATING TOOLBAR */}
-          <FloatingToolbar 
-            isMicrophoneEnabled={isMicrophoneEnabled}
-            isCameraEnabled={isCameraEnabled}
-            isScreenSharing={isScreenSharing}
-            handRaised={handRaised}
-            chatOpen={sidebarOpen}
-            captionsEnabled={captionsEnabled}
-            isRecording={isRecording}
-            userRole={user.role}
-            onToggleMic={() => localParticipant?.setMicrophoneEnabled(!isMicrophoneEnabled)}
-            onToggleCamera={() => localParticipant?.setCameraEnabled(!isCameraEnabled)}
-            onToggleScreenShare={handleToggleScreenShare}
-            onOpenWhiteboard={() => setWhiteboardOpen(true)}
-            onSendReaction={handleSendReaction}
-            onToggleHand={() => setHandRaised(!handRaised)}
-            onToggleChat={() => setSidebarOpen(!sidebarOpen)}
-            onOpenAI={() => setAiAssistantOpen(true)}
-            onToggleCaptions={() => setCaptionsEnabled(!captionsEnabled)}
-            onOpenMoreMenu={() => setMoreMenuOpen(!moreMenuOpen)}
-            onLeaveClass={handleLeaveClass}
-            onStartRecording={handleStartRecording}
-            onStopRecording={handleStopRecording}
-          />
-
-        </div>
-
-        {/* 4. TABBED SIDEBAR PANEL */}
         {sidebarOpen && (
-          <SidebarPanel 
-            user={user}
+          <SidebarPanel
+            activeTab="chat"
             chats={chats}
-            onSendChat={handleSendChat}
             chatInput={chatInput}
-            setChatInput={setChatInput}
+            onChangeChatInput={setChatInput}
+            onSendChat={handleSendChat}
+            user={user}
             onClose={() => setSidebarOpen(false)}
-            isLocked={isLocked}
-            onToggleLock={() => setIsLocked(!isLocked)}
           />
         )}
+      </div>
 
-      </main>
+      {/* 3. FLOATING TOOLBAR CONTROLS */}
+      <FloatingToolbar
+        isTeacher={user.role === 'TEACHER'}
+        handRaised={handRaised}
+        onToggleHand={() => setHandRaised(!handRaised)}
+        sidebarOpen={sidebarOpen}
+        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onOpenWhiteboard={() => setWhiteboardOpen(true)}
+        isRecording={isRecording}
+        onStartRecording={handleStartRecording}
+        onStopRecording={handleStopRecording}
+        isScreenSharing={isScreenSharing}
+        onToggleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
+        captionsEnabled={captionsEnabled}
+        onToggleCaptions={() => setCaptionsEnabled(!captionsEnabled)}
+        onLeaveClass={handleLeave}
+      />
 
-      {/* MODALS */}
+      {/* 4. MODALS */}
       {whiteboardOpen && (
-        <WhiteboardModal 
-          onClose={() => setWhiteboardOpen(false)} 
-          isTeacher={user.role === 'TEACHER'}
-        />
-      )}
-
-      {quizOpen && (
-        <LiveQuizModal
-          onClose={() => setQuizOpen(false)}
-          userRole={user.role}
-        />
-      )}
-
-      {aiAssistantOpen && (
-        <AIAssistantModal 
-          onClose={() => setAiAssistantOpen(false)} 
-          userRole={user.role}
-        />
+        <WhiteboardModal onClose={() => setWhiteboardOpen(false)} />
       )}
 
       {settingsOpen && (
-        <DeviceSettingsModal 
-          onClose={() => setSettingsOpen(false)} 
-        />
+        <DeviceSettingsModal onClose={() => setSettingsOpen(false)} />
       )}
 
-      {/* Save Recording Modal */}
+      {/* Teacher Save Recording Modal */}
       {saveModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="bg-[#202124] border border-white/10 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative text-white">
-            <div className="flex justify-between items-center p-4 border-b border-white/10 bg-[#28292c]">
-              <h3 className="font-bold text-white text-sm">Publish Class Recording</h3>
-              <button onClick={() => setSaveModalOpen(false)} className="text-gray-400 hover:text-white">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4 text-white">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+              <h3 className="font-bold text-red-400 text-base">Publish Class Recording</h3>
+              <button onClick={() => setSaveModalOpen(false)} className="text-slate-400 hover:text-white">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            <form onSubmit={handleSaveRecording} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleSaveRecording} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-gray-300 mb-1">Subject</label>
-                <select 
-                  className="w-full p-2.5 bg-[#3c4043] border border-white/10 rounded-xl text-white focus:outline-none"
-                  value={recordingSubject}
-                  onChange={(e) => setRecordingSubject(e.target.value)}
-                >
-                  <option>Mathematics</option>
-                  <option>Physics</option>
-                  <option>Chemistry</option>
-                  <option>History</option>
-                </select>
-              </div>
-              <div>
-                <label className="block font-bold text-gray-300 mb-1">Recording Title</label>
-                <input 
-                  type="text" 
+                <label className="block font-bold text-slate-300 mb-1">Recording Title</label>
+                <input
+                  type="text"
                   required
-                  className="w-full p-2.5 bg-[#3c4043] border border-white/10 rounded-xl text-white focus:outline-none"
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={recordingTitle}
                   onChange={(e) => setRecordingTitle(e.target.value)}
                 />
               </div>
-              <div className="bg-white/5 p-3 rounded-xl flex items-center justify-between text-gray-400">
-                <span>Recorded Duration:</span>
-                <span className="font-bold text-amber-400">{formatTime(recordingSeconds)}</span>
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Subject</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
+                  value={recordingSubject}
+                  onChange={(e) => setRecordingSubject(e.target.value)}
+                />
               </div>
-              <button 
+              <div className="p-3 bg-slate-800/50 rounded-xl text-[11px] text-slate-400 space-y-1">
+                <p>Recorded Duration: <strong className="text-white">{formatTime(recordingSeconds)}</strong></p>
+                <p>Instructor: <strong className="text-white">{user.name}</strong></p>
+              </div>
+              <button
                 type="submit"
                 disabled={savingRecording}
-                className="w-full py-3 bg-amber-500 text-black font-extrabold rounded-xl active:scale-95 transition-transform disabled:opacity-50"
+                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md mt-2"
               >
-                {savingRecording ? 'Publishing...' : 'Save & Publish Recording'}
+                {savingRecording ? 'Publishing...' : 'Publish Recording'}
               </button>
             </form>
           </div>
