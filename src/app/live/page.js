@@ -21,9 +21,24 @@ export default function LiveClassPage() {
   const { user } = useAuth();
   const [token, setToken] = useState('');
   const [roomName, setRoomName] = useState('paathshalla-class');
+  const [classSubject, setClassSubject] = useState('Mathematics 101');
+  const [classTopic, setClassTopic] = useState('Integral Calculus & Limits');
   const [connecting, setConnecting] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlRoom = params.get('room');
+      const urlSubject = params.get('subject');
+      const urlTopic = params.get('topic');
+
+      if (urlRoom) setRoomName(urlRoom);
+      if (urlSubject) setClassSubject(urlSubject);
+      if (urlTopic) setClassTopic(urlTopic);
+    }
+  }, []);
 
   useEffect(() => {
     async function getToken() {
@@ -37,7 +52,7 @@ export default function LiveClassPage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                className: 'Live Class Session',
+                className: classSubject + ' - ' + classTopic,
                 classId: roomName,
               }),
             }).catch((err) => console.error('Auto attendance failed:', err));
@@ -54,7 +69,7 @@ export default function LiveClassPage() {
     if (user) {
       getToken();
     }
-  }, [user, roomName]);
+  }, [user, roomName, classSubject, classTopic]);
 
   if (!user) return null;
 
@@ -94,14 +109,14 @@ export default function LiveClassPage() {
       audio={true}
       data-lk-theme="default"
     >
-      <PaathShallaLiveClass user={user} />
+      <PaathShallaLiveClass user={user} classSubject={classSubject} classTopic={classTopic} />
       <RoomAudioRenderer />
     </LiveKitRoom>
   );
 }
 
 // Custom Conference UI Component
-function PaathShallaLiveClass({ user }) {
+function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTopic = "Integral Calculus & Limits" }) {
   const router = useRouter();
 
   // Classroom Feature States
@@ -281,8 +296,8 @@ function PaathShallaLiveClass({ user }) {
 
       {/* 1. GLASS STICKY HEADER */}
       <ClassroomHeader 
-        courseTitle="Mathematics 101"
-        topicName="Integral Calculus & Limits"
+        courseTitle={classSubject}
+        topicName={classTopic}
         isLive={true}
         isRecording={isRecording}
         recordingSeconds={recordingSeconds}
