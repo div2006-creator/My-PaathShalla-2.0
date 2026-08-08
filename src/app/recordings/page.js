@@ -53,7 +53,12 @@ export default function RecordingsPage() {
 
       {/* Recordings Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecordings.length > 0 ? (
+        {loading ? (
+          <div className="p-12 text-center text-slate-400 space-y-2 col-span-full">
+            <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p className="text-xs font-bold text-slate-300">Loading lecture recordings...</p>
+          </div>
+        ) : filteredRecordings.length > 0 ? (
           filteredRecordings.map((rec) => (
             <div
               key={rec.id}

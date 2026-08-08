@@ -68,12 +68,10 @@ export default function LiveClassPage() {
     } catch (e) {
       console.error(e);
       setSchedule([]);
-    } fontFinally();
+    } finally {
+      setLoadingSchedule(false);
+    }
   };
-
-  function fontFinally() {
-    setLoadingSchedule(false);
-  }
 
   useEffect(() => {
     fetchSchedule();
@@ -148,35 +146,36 @@ export default function LiveClassPage() {
       });
 
       if (res.ok) {
-        const data = await res.json();
-        setSchedule([data.class, ...schedule]);
-        setNewTopic('');
         setCreateModalOpen(false);
+        setNewTopic('');
+        fetchSchedule();
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  if (!user) return null;
-
-  // 1. IF ACTIVE ROOM IS SELECTED -> RENDER LIVEKIT WEBRTC STAGE
+  // 1. IF AN ACTIVE ROOM IS SELECTED -> RENDER FULL LIVEKIT CLASSROOM STAGE
   if (activeRoom) {
     if (connecting) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white space-y-4">
+        <div className="h-screen w-full bg-[#0F172A] flex flex-col items-center justify-center text-white space-y-4">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="font-extrabold text-sm text-red-400 tracking-wide">Connecting to Live Classroom Stage...</p>
-          <p className="text-xs text-slate-400 font-bold">{classSubject} • {classTopic}</p>
+          <div className="text-center">
+            <h2 className="text-lg font-bold">Connecting to PaathShalla WebRTC Stage...</h2>
+            <p className="text-slate-400 text-xs mt-1">Classroom: {classSubject} - {classTopic}</p>
+          </div>
         </div>
       );
     }
 
     if (error) {
       return (
-        <div className="flex flex-col items-center justify-center h-screen bg-slate-950 p-4 text-center text-white space-y-3">
-          <span className="material-symbols-outlined text-red-500 text-6xl">error</span>
-          <h2 className="text-xl font-bold text-white">Failed to Join Classroom</h2>
+        <div className="h-screen w-full bg-[#0F172A] flex flex-col items-center justify-center text-white space-y-4 p-4 text-center">
+          <div className="w-14 h-14 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center border border-red-500/30">
+            <span className="material-symbols-outlined text-3xl">error</span>
+          </div>
+          <h2 className="text-xl font-bold">Could Not Connect to Classroom</h2>
           <p className="text-slate-400 text-xs max-w-md">{error}</p>
           <button 
             onClick={() => setActiveRoom(null)}
@@ -211,7 +210,7 @@ export default function LiveClassPage() {
   }
 
   // 2. IF NO ACTIVE ROOM IS SELECTED -> RENDER SCHEDULED LIVE CLASSES LOBBY
-  const isTeacher = user.role === 'TEACHER';
+  const isTeacher = user?.role === 'TEACHER';
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -320,28 +319,29 @@ export default function LiveClassPage() {
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                 >
-                  <option>Mathematics</option>
-                  <option>Physics</option>
-                  <option>Chemistry</option>
-                  <option>Computer Science</option>
+                  <option value="Mathematics">Mathematics</option>
+                  <option value="Physics">Physics</option>
+                  <option value="Chemistry">Chemistry</option>
+                  <option value="Biology">Biology</option>
+                  <option value="Computer Science">Computer Science</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Lecture Topic</label>
+                <label className="block font-bold text-slate-300 mb-1">Topic Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Binary Search Trees & Graph Traversals"
+                  placeholder="e.g. Organic Chemistry Reactions"
                   className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={newTopic}
                   onChange={(e) => setNewTopic(e.target.value)}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Scheduled Time</label>
+                  <label className="block font-bold text-slate-300 mb-1">Time</label>
                   <input
                     type="text"
                     required
@@ -439,7 +439,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         body: JSON.stringify({
           title: recordingTitle,
           subject: recordingSubject,
-          instructorName: user.name,
+          instructorName: user?.name || 'Faculty Instructor',
           duration: formatTime(recordingSeconds) || '15:00',
         }),
       });
@@ -463,8 +463,8 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
     setChats([
       ...chats,
       {
-        sender: user.name,
-        role: user.role,
+        sender: user?.name || 'Student',
+        role: user?.role || 'STUDENT',
         text: chatInput,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       },
@@ -491,7 +491,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         isRecording={isRecording}
         recordingSeconds={recordingSeconds}
         participantCount={1}
-        teacherName={user.role === 'TEACHER' ? user.name : 'Faculty Instructor'}
+        teacherName={user?.role === 'TEACHER' ? user?.name : 'Faculty Instructor'}
         isLocked={isLocked}
         onToggleLock={() => setIsLocked(!isLocked)}
         onOpenSettings={() => setSettingsOpen(true)}
@@ -503,7 +503,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
           }
         }}
         onLeaveClass={handleLeave}
-        userRole={user.role}
+        userRole={user?.role || 'STUDENT'}
       />
 
       {/* 2. MAIN STAGE CONTENT (VIDEO GRID + SIDEBAR) */}
@@ -530,7 +530,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
 
       {/* 3. FLOATING TOOLBAR CONTROLS */}
       <FloatingToolbar
-        isTeacher={user.role === 'TEACHER'}
+        isTeacher={user?.role === 'TEACHER'}
         handRaised={handRaised}
         onToggleHand={() => setHandRaised(!handRaised)}
         sidebarOpen={sidebarOpen}
@@ -588,7 +588,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
               </div>
               <div className="p-3 bg-slate-800/50 rounded-xl text-[11px] text-slate-400 space-y-1">
                 <p>Recorded Duration: <strong className="text-white">{formatTime(recordingSeconds)}</strong></p>
-                <p>Instructor: <strong className="text-white">{user.name}</strong></p>
+                <p>Instructor: <strong className="text-white">{user?.name || 'Faculty Instructor'}</strong></p>
               </div>
               <button
                 type="submit"
