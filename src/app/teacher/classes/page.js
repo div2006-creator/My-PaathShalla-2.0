@@ -51,7 +51,7 @@ export default function TeacherClassesPage() {
   ]);
 
   const [selectedClass, setSelectedClass] = useState(classes[0]);
-  const [activeTab, setActiveTab] = useState('overview'); // overview, students, live, assignments, tests, attendance, materials, recordings, announcements, analytics
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'live' | 'recordings' | 'assignments' | 'attendance'
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [addStudentModalOpen, setAddStudentModalOpen] = useState(false);
 
@@ -132,10 +132,10 @@ export default function TeacherClassesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded border border-amber-500/30">
-            Classroom Operations
+            Class Management
           </span>
-          <h1 className="text-2xl font-extrabold text-white font-display mt-1">Class Management Hub</h1>
-          <p className="text-xs text-slate-400">Manage sections, enrolled students, live sessions, and class materials</p>
+          <h1 className="text-2xl font-extrabold text-white font-display mt-1">Classroom Management Hub</h1>
+          <p className="text-xs text-slate-400">Manage live classes, recordings, assignments, and attendance for enrolled students</p>
         </div>
 
         <button
@@ -216,31 +216,26 @@ export default function TeacherClassesPage() {
               </div>
             </div>
 
-            {/* 10-Tab Navigation Bar */}
-            <div className="flex items-center overflow-x-auto no-scrollbar border-b border-slate-800 bg-slate-900 rounded-xl p-1 text-xs font-bold gap-1">
+            {/* 5 Core Tabs Navigation Bar (Prompt Spec #7) */}
+            <div className="grid grid-cols-5 border-b border-slate-800 bg-slate-900 rounded-xl p-1 text-xs font-bold gap-1 text-center">
               {[
                 { id: 'overview', label: 'Overview', icon: 'dashboard' },
-                { id: 'students', label: 'Students', icon: 'group' },
-                { id: 'live', label: 'Live Classes', icon: 'sensors' },
-                { id: 'assignments', label: 'Assignments', icon: 'assignment' },
-                { id: 'tests', label: 'Tests', icon: 'quiz' },
-                { id: 'attendance', label: 'Attendance', icon: 'how_to_reg' },
-                { id: 'materials', label: 'Materials', icon: 'folder' },
+                { id: 'live', label: 'Live Class', icon: 'sensors' },
                 { id: 'recordings', label: 'Recordings', icon: 'videocam' },
-                { id: 'announcements', label: 'Announcements', icon: 'campaign' },
-                { id: 'analytics', label: 'Analytics', icon: 'analytics' },
+                { id: 'assignments', label: 'Assignments', icon: 'assignment' },
+                { id: 'attendance', label: 'Attendance', icon: 'how_to_reg' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-3 py-2 rounded-lg flex items-center gap-1.5 shrink-0 transition-all ${
+                  className={`py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                     activeTab === tab.id
                       ? 'bg-indigo-600 text-white shadow-sm'
                       : 'text-slate-400 hover:text-white hover:bg-slate-800'
                   }`}
                 >
                   <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
@@ -249,71 +244,127 @@ export default function TeacherClassesPage() {
             
             {/* TAB 1: OVERVIEW */}
             {activeTab === 'overview' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">Enrolled Students</span>
-                  <p className="text-2xl font-black text-white">{selectedClass.studentsCount}</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Enrolled Students</span>
+                    <p className="text-2xl font-black text-white">{selectedClass.studentsCount}</p>
+                  </div>
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Class Attendance %</span>
+                    <p className="text-2xl font-black text-emerald-400">94% Average</p>
+                  </div>
+                  <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Assignments Due</span>
+                    <p className="text-2xl font-black text-amber-400">2 Pending</p>
+                  </div>
                 </div>
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">Class Attendance</span>
-                  <p className="text-2xl font-black text-emerald-400">94% Average</p>
-                </div>
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase">Published Coursework</span>
-                  <p className="text-2xl font-black text-amber-400">8 Modules</p>
+
+                {/* Enrolled Students Directory */}
+                <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
+                  <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 className="font-bold text-white text-sm">Enrolled Students ({selectedClass.students.length})</h3>
+                    <button
+                      onClick={() => setAddStudentModalOpen(true)}
+                      className="px-3 py-1.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400"
+                    >
+                      + Add Student
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {selectedClass.students.map((stu) => (
+                      <div key={stu.id} className="p-3 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold text-xs">
+                            {stu.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="font-bold text-white text-xs">{stu.name}</p>
+                            <span className="text-[10px] text-slate-400">{stu.email}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs font-bold">
+                          <span className="text-emerald-400">Att: {stu.attendance}</span>
+                          <button
+                            onClick={() => handleRemoveStudent(stu.id)}
+                            className="text-slate-400 hover:text-red-400 text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 2: STUDENTS MANAGEMENT */}
-            {activeTab === 'students' && (
-              <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                  <h3 className="font-bold text-white text-sm">Enrolled Student Directory</h3>
-                  <button
-                    onClick={() => setAddStudentModalOpen(true)}
-                    className="px-3 py-1.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400"
-                  >
-                    + Add Student
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {selectedClass.students.map((stu) => (
-                    <div key={stu.id} className="p-3 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold text-xs">
-                          {stu.name.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div>
-                          <p className="font-bold text-white text-xs">{stu.name}</p>
-                          <span className="text-[10px] text-slate-400">{stu.email}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs font-bold">
-                        <span className="text-emerald-400">Att: {stu.attendance}</span>
-                        <span className="text-amber-400">Avg: {stu.score}</span>
-                        <button
-                          onClick={() => handleRemoveStudent(stu.id)}
-                          className="text-slate-400 hover:text-red-400 text-xs"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* OTHER TABS QUICK VIEW */}
-            {['live', 'assignments', 'tests', 'attendance', 'materials', 'recordings', 'announcements', 'analytics'].includes(activeTab) && (
-              <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center space-y-3">
-                <span className="material-symbols-outlined text-4xl text-indigo-400">inventory_2</span>
-                <h4 className="font-bold text-white text-base capitalize">{activeTab} Module Hub</h4>
+            {/* TAB 2: LIVE CLASS */}
+            {activeTab === 'live' && (
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center space-y-4">
+                <span className="material-symbols-outlined text-red-500 text-5xl animate-pulse">sensors</span>
+                <h3 className="text-xl font-bold text-white font-display">Live Teaching Stage</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Access live sessions, grade coursework, track attendance, or review analytics specifically scoped to {selectedClass.name}.
+                  Launch the WebRTC LiveKit classroom stage for {selectedClass.name}. Enable screen sharing, digital whiteboard, and live attendance tracking.
                 </p>
+                <Link
+                  href={`/live?room=${selectedClass.id}&subject=${encodeURIComponent(selectedClass.subject)}`}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg inline-flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">sensors</span> Start Live Classroom Now
+                </Link>
+              </div>
+            )}
+
+            {/* TAB 3: RECORDINGS */}
+            {activeTab === 'recordings' && (
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center space-y-4">
+                <span className="material-symbols-outlined text-indigo-400 text-5xl">videocam</span>
+                <h3 className="text-xl font-bold text-white font-display">Class Lecture Recordings</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Access all recorded live classroom sessions and attached lecture PDFs for {selectedClass.name}.
+                </p>
+                <Link
+                  href="/recordings"
+                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md inline-flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">play_circle</span> Open Recordings Archive
+                </Link>
+              </div>
+            )}
+
+            {/* TAB 4: ASSIGNMENTS */}
+            {activeTab === 'assignments' && (
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center space-y-4">
+                <span className="material-symbols-outlined text-amber-400 text-5xl">assignment</span>
+                <h3 className="text-xl font-bold text-white font-display">Class Assignments & Homework</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Create coursework, inspect student submissions, and grade assignments for {selectedClass.name}.
+                </p>
+                <Link
+                  href="/assignments"
+                  className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">add_task</span> Open Assignments Portal
+                </Link>
+              </div>
+            )}
+
+            {/* TAB 5: ATTENDANCE */}
+            {activeTab === 'attendance' && (
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl text-center space-y-4">
+                <span className="material-symbols-outlined text-emerald-400 text-5xl">how_to_reg</span>
+                <h3 className="text-xl font-bold text-white font-display">Class Attendance Tracker</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  Review automated join/leave timestamps and attendance status for {selectedClass.name}.
+                </p>
+                <Link
+                  href="/teacher/attendance"
+                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md inline-flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">fact_check</span> View Attendance Logs
+                </Link>
               </div>
             )}
 

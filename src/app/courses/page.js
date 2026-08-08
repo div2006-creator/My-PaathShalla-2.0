@@ -101,30 +101,26 @@ export default function CoursesPage() {
           </div>
         </div>
 
-        {/* Course Navigation Tabs */}
-        <div className="flex gap-2 overflow-x-auto border-t border-slate-800 pt-3 no-scrollbar text-xs">
+        {/* Course Navigation Tabs (5 Core Workflows) */}
+        <div className="grid grid-cols-5 border-t border-slate-800 pt-3 text-xs font-bold gap-1 text-center">
           {[
             { id: 'overview', label: 'Overview', icon: 'info' },
             { id: 'lectures', label: 'Lectures', icon: 'play_circle' },
-            { id: 'notes', label: 'PDF Notes', icon: 'description' },
-            { id: 'dpp', label: 'DPP Practice', icon: 'fitness_center' },
+            { id: 'recordings', label: 'Recordings', icon: 'videocam' },
             { id: 'assignments', label: 'Assignments', icon: 'assignment' },
-            { id: 'tests', label: 'Test Series', icon: 'quiz' },
-            { id: 'doubts', label: 'Ask Doubts', icon: 'help' },
-            { id: 'resources', label: 'Resources', icon: 'folder' },
-            { id: 'announcements', label: 'Announcements', icon: 'campaign' },
+            { id: 'attendance', label: 'Attendance', icon: 'how_to_reg' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition-all shrink-0 ${
+              className={`py-2 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === tab.id
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-slate-800 text-slate-400 hover:text-white'
               }`}
             >
               <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-              <span>{tab.label}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>

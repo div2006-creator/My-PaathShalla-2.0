@@ -13,31 +13,11 @@ export default function SidebarPanel({
   isLocked = false,
   onToggleLock
 }) {
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'qna' | 'polls' | 'notes' | 'resources' | 'participants'
+  const [activeTab, setActiveTab] = useState('chat'); // 'chat' | 'participants' | 'resources'
   const chatEndRef = useRef(null);
 
   // Real LiveKit Participants
   const liveParticipants = useParticipants();
-
-  // Q&A State
-  const [questions, setQuestions] = useState([]);
-  const [newQuestion, setNewQuestion] = useState('');
-
-  // Polls State
-  const [polls, setPolls] = useState([]);
-  const [selectedPollOption, setSelectedPollOption] = useState(null);
-  const [votedPollId, setVotedPollId] = useState(null);
-
-  // Poll Creator State (Teacher)
-  const [createPollOpen, setCreatePollOpen] = useState(false);
-  const [pollQuestionInput, setPollQuestionInput] = useState('');
-  const [pollOption1, setPollOption1] = useState('');
-  const [pollOption2, setPollOption2] = useState('');
-
-  // Shared Notes State
-  const [notesText, setNotesText] = useState(
-    '# Class Lecture Notes\n\n1. Real-time collaborative notes taken during class session.\n2. Summaries and equations saved by instructor and students.'
-  );
 
   // Shared Resources State
   const [resources] = useState([
@@ -45,212 +25,122 @@ export default function SidebarPanel({
     { id: 'res-2', name: 'Formula_Cheatsheet.pdf', size: '1.1 MB', type: 'PDF' }
   ]);
 
-  // Participants Search State
+  // Participants Search & Mute controls
   const [searchMember, setSearchMember] = useState('');
   const [studentMicsDisabled, setStudentMicsDisabled] = useState(false);
-  const [studentCamsDisabled, setStudentCamsDisabled] = useState(false);
-
-  // Fetch Q&A from backend
-  const fetchQna = async () => {
-    try {
-      const res = await fetch('/api/live/qna');
-      const data = await res.json();
-      if (data.questions) setQuestions(data.questions);
-    } catch (e) {
-      console.error('Fetch QnA failed:', e);
-    }
-  };
-
-  // Fetch Polls from backend
-  const fetchPolls = async () => {
-    try {
-      const res = await fetch('/api/live/polls');
-      const data = await res.json();
-      if (data.polls) setPolls(data.polls);
-    } catch (e) {
-      console.error('Fetch Polls failed:', e);
-    }
-  };
-
-  useEffect(() => {
-    fetchQna();
-    fetchPolls();
-    const interval = setInterval(() => {
-      fetchQna();
-      fetchPolls();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chats, activeTab]);
+  }, [chats]);
 
-  // Submit Q&A Question to Backend API
-  const handleAddQuestion = async (e) => {
-    e.preventDefault();
-    if (!newQuestion.trim()) return;
-    const text = newQuestion;
-    setNewQuestion('');
-    try {
-      const res = await fetch('/api/live/qna', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: user.name || 'Student', text }),
-      });
-      if (res.ok) fetchQna();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Upvote Q&A Question via Backend API
-  const handleUpvoteQuestion = async (qId) => {
-    try {
-      const res = await fetch('/api/live/qna', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: qId, action: 'upvote' }),
-      });
-      if (res.ok) fetchQna();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Vote on Poll via Backend API
-  const handleVotePoll = async (pollId, optionIdx) => {
-    if (votedPollId === pollId) return;
-    setVotedPollId(pollId);
-    setSelectedPollOption(optionIdx);
-    try {
-      const res = await fetch('/api/live/polls', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pollId, optionIndex: optionIdx }),
-      });
-      if (res.ok) fetchPolls();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Create Poll (Teacher) via Backend API
-  const handleCreatePoll = async (e) => {
-    e.preventDefault();
-    if (!pollQuestionInput || !pollOption1 || !pollOption2) return;
-    const q = pollQuestionInput;
-    const opts = [pollOption1, pollOption2];
-    setPollQuestionInput('');
-    setPollOption1('');
-    setPollOption2('');
-    setCreatePollOpen(false);
-    try {
-      const res = await fetch('/api/live/polls', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, options: opts }),
-      });
-      if (res.ok) fetchPolls();
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // Export Notes
-  const handleDownloadNotes = () => {
-    const element = document.createElement('a');
-    const file = new Blob([notesText], { type: 'text/markdown' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'Class_Lecture_Notes.md';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  // Build Real Room Participants
-  const realMembers = liveParticipants.length > 0 
+  const displayParticipants = liveParticipants.length > 0
     ? liveParticipants.map(p => ({
-        id: p.sid || p.identity,
-        name: p.identity === user.id ? 'You (' + (p.name || user.name) + ')' : (p.name || p.identity || 'Participant'),
-        role: (p.metadata?.includes('TEACHER') || p.identity === user.id && user.role === 'TEACHER') ? 'TEACHER' : 'STUDENT',
+        id: p.identity,
+        name: p.name || p.identity,
+        role: p.isLocal && user?.role === 'TEACHER' ? 'TEACHER' : 'STUDENT',
+        isLocal: p.isLocal,
         isMuted: !p.isMicrophoneEnabled,
-        isCamOff: !p.isCameraEnabled,
-        hand: false
+        isHandRaised: p.isSpeaking
       }))
     : [
-        { id: user.id, name: user.name + ' (You)', role: user.role, isMuted: false, isCamOff: false, hand: false }
+        { id: 'p1', name: 'Prof. Rajesh Varma (You)', role: user?.role || 'TEACHER', isMuted: false, isHandRaised: false },
+        { id: 'p2', name: 'Aarav Mehta', role: 'STUDENT', isMuted: true, isHandRaised: true },
+        { id: 'p3', name: 'Rohan Gupta', role: 'STUDENT', isMuted: false, isHandRaised: false },
+        { id: 'p4', name: 'Priya Sharma', role: 'STUDENT', isMuted: fontIsMuted(true), isHandRaised: false }
       ];
 
-  const filteredMembers = realMembers.filter((m) =>
-    m.name.toLowerCase().includes(searchMember.toLowerCase())
+  function fontIsMuted(val) { return val; }
+
+  const filteredParticipants = displayParticipants.filter(p =>
+    p.name.toLowerCase().includes(searchMember.toLowerCase())
   );
 
   return (
-    <aside className="w-full lg:w-80 fixed inset-x-0 bottom-0 top-14 z-50 lg:relative lg:top-0 lg:z-auto bg-[#202124] border border-white/10 rounded-t-3xl lg:rounded-2xl flex flex-col shadow-2xl overflow-hidden shrink-0 h-[75vh] lg:h-full">
+    <div className="w-80 sm:w-96 bg-slate-900 border-l border-slate-800 flex flex-col h-full z-30 shadow-2xl">
       
-      {/* 6 TAB NAVIGATION HEADER */}
-      <div className="flex items-center overflow-x-auto no-scrollbar border-b border-white/10 bg-[#28292c] shrink-0 text-xs font-bold">
-        {[
-          { id: 'chat', label: 'Chat', icon: 'chat' },
-          { id: 'qna', label: 'Q&A', icon: 'quiz' },
-          { id: 'polls', label: 'Polls', icon: 'poll' },
-          { id: 'notes', label: 'Notes', icon: 'description' },
-          { id: 'resources', label: 'Files', icon: 'folder' },
-          { id: 'participants', label: 'People', icon: 'group' }
-        ].map((tab) => (
+      {/* Header with 3 Tabs: Chat, Participants, Resources */}
+      <div className="p-3 border-b border-slate-800 flex flex-col gap-2">
+        <div className="flex justify-between items-center">
+          <h3 className="font-extrabold text-white text-xs font-display flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-indigo-400 text-sm">meeting_room</span>
+            <span>Classroom Panel</span>
+          </h3>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggleLock}
+              className={`p-1 rounded-lg text-xs transition-colors ${
+                isLocked ? 'text-amber-400 bg-amber-500/20' : 'text-slate-400 hover:text-white'
+              }`}
+              title={isLocked ? 'Unlock Panel' : 'Lock Panel Open'}
+            >
+              <span className="material-symbols-outlined text-sm">{isLocked ? 'lock' : 'lock_open'}</span>
+            </button>
+            <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
+              <span className="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="grid grid-cols-3 gap-1 bg-slate-800/60 p-1 rounded-xl text-xs font-bold text-slate-300">
           <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-3 flex items-center gap-1.5 shrink-0 border-b-2 transition-colors ${
-              activeTab === tab.id
-                ? 'border-[#8ab4f8] text-[#8ab4f8] bg-white/5'
-                : 'border-transparent text-gray-400 hover:text-white'
+            onClick={() => setActiveTab('chat')}
+            className={`py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
+              activeTab === 'chat' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:text-white'
             }`}
           >
-            <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-            <span>{tab.label}</span>
+            <span className="material-symbols-outlined text-sm">chat</span>
+            <span>Chat</span>
           </button>
-        ))}
-        
-        <button onClick={onClose} className="px-3 py-3 ml-auto text-gray-400 hover:text-white shrink-0">
-          <span className="material-symbols-outlined text-base">close</span>
-        </button>
+
+          <button
+            onClick={() => setActiveTab('participants')}
+            className={`py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
+              activeTab === 'participants' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:text-white'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">groups</span>
+            <span>Peers ({displayParticipants.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('resources')}
+            className={`py-1.5 rounded-lg flex items-center justify-center gap-1 transition-all ${
+              activeTab === 'resources' ? 'bg-indigo-600 text-white shadow-sm' : 'hover:text-white'
+            }`}
+          >
+            <span className="material-symbols-outlined text-sm">folder</span>
+            <span>Handouts</span>
+          </button>
+        </div>
       </div>
 
-      {/* TAB 1: RICH IN-CALL CHAT */}
+      {/* TAB CONTENT 1: CHAT */}
       {activeTab === 'chat' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e]">
-          <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 min-h-0">
-            {chats.map((c) => {
-              const isMe = c.senderId === user.id;
-              const isTeacher = c.senderRole === 'TEACHER';
-
+        <div className="flex-1 flex flex-col justify-between overflow-hidden">
+          <div className="flex-1 p-4 overflow-y-auto space-y-3">
+            {chats.map((msg, idx) => {
+              const isMe = msg.sender === user?.name || msg.sender === 'You';
+              const isTeacher = msg.role === 'TEACHER' || msg.isTeacher;
               return (
-                <div key={c.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
-                  <div className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white ${
-                    isTeacher ? 'bg-[#fbbc04] text-black' : isMe ? 'bg-[#8ab4f8] text-black' : 'bg-[#3c4043]'
-                  }`}>
-                    {c.senderName.split(' ').map(n => n[0]).join('')}
+                <div key={idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}>
+                  <div className="flex items-center gap-1.5 text-[10px]">
+                    <span className="font-bold text-slate-300">{msg.sender}</span>
+                    {isTeacher && (
+                      <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 font-extrabold rounded text-[9px] border border-amber-500/30">
+                        Teacher
+                      </span>
+                    )}
+                    <span className="text-slate-500">{msg.time || 'Now'}</span>
                   </div>
-                  <div className={`flex flex-col gap-0.5 max-w-[82%] ${isMe ? 'items-end' : ''}`}>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`font-semibold text-[11px] ${isTeacher ? 'text-[#fbbc04]' : isMe ? 'text-[#8ab4f8]' : 'text-gray-300'}`}>
-                        {c.senderName}
-                      </span>
-                      <span className="text-[9px] text-gray-500">
-                        {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className={`p-2.5 rounded-2xl text-xs text-white ${
-                      isMe 
-                        ? 'bg-[#8ab4f8]/20 border border-[#8ab4f8]/30' 
-                        : isTeacher 
-                          ? 'bg-[#fbbc04]/10 border border-[#fbbc04]/30' 
-                          : 'bg-[#3c4043] border border-white/10'
-                    }`}>
-                      {c.message}
-                    </div>
+                  <div className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
+                    isMe
+                      ? 'bg-indigo-600 text-white rounded-tr-none'
+                      : isTeacher
+                      ? 'bg-slate-800 text-amber-300 border border-amber-500/30 rounded-tl-none font-medium'
+                      : 'bg-slate-800 text-slate-200 rounded-tl-none'
+                  }`}>
+                    {msg.text}
                   </div>
                 </div>
               );
@@ -258,181 +148,97 @@ export default function SidebarPanel({
             <div ref={chatEndRef} />
           </div>
 
-          <div className="p-3 bg-[#28292c] border-t border-white/10 shrink-0">
-            <form onSubmit={onSendChat} className="relative flex items-center">
-              <input 
-                className="w-full bg-[#3c4043] border border-white/10 rounded-full py-2.5 pl-4 pr-10 focus:outline-none focus:border-[#8ab4f8] text-xs text-white placeholder-gray-400" 
-                placeholder="Send a message to everyone..." 
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-              />
-              <button type="submit" className="absolute right-2 w-7 h-7 bg-[#8ab4f8] rounded-full flex items-center justify-center text-black hover:opacity-90 active:scale-90 transition-all">
-                <span className="material-symbols-outlined text-[15px] text-black">send</span>
-              </button>
-            </form>
-          </div>
+          <form onSubmit={onSendChat} className="p-3 border-t border-slate-800 flex items-center gap-2 bg-slate-900">
+            <input
+              type="text"
+              placeholder="Ask teacher or chat with class..."
+              className="flex-1 p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={!chatInput.trim()}
+              className="p-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-xl shadow-md flex items-center justify-center"
+            >
+              <span className="material-symbols-outlined text-base">send</span>
+            </button>
+          </form>
         </div>
       )}
 
-      {/* TAB 2: Q&A BOARD */}
-      {activeTab === 'qna' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 overflow-y-auto space-y-3">
-          <form onSubmit={handleAddQuestion} className="flex gap-2">
-            <input 
+      {/* TAB CONTENT 2: PARTICIPANTS */}
+      {activeTab === 'participants' && (
+        <div className="flex-1 flex flex-col overflow-hidden p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <input
               type="text"
-              placeholder="Ask a question to the class..."
-              className="flex-1 bg-[#3c4043] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#8ab4f8]"
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
+              placeholder="Search participant..."
+              className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none"
+              value={searchMember}
+              onChange={(e) => setSearchMember(e.target.value)}
             />
-            <button type="submit" className="px-3 py-2 bg-[#8ab4f8] text-black font-bold text-xs rounded-xl hover:opacity-90">
-              Ask
-            </button>
-          </form>
+          </div>
 
-          <div className="space-y-3">
-            {questions.map((q) => (
-              <div key={q.id} className="bg-[#28292c] border border-white/10 p-3 rounded-xl text-xs space-y-2">
-                <div className="flex justify-between items-start">
-                  <span className="font-bold text-[#8ab4f8]">{q.author}</span>
-                  <button 
-                    onClick={() => handleUpvoteQuestion(q.id)}
-                    className="flex items-center gap-1 bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-lg text-white font-semibold"
-                  >
-                    <span className="material-symbols-outlined text-xs text-[#8ab4f8]">thumb_up</span>
-                    <span>{q.upvotes}</span>
-                  </button>
-                </div>
-                <p className="text-white">{q.text}</p>
-                {q.answered ? (
-                  <div className="bg-green-500/10 border border-green-500/30 p-2 rounded-lg text-[11px] text-green-300">
-                    <span className="font-bold">Answered Live:</span> {q.answer || 'Answered by teacher in live stream.'}
+          {user?.role === 'TEACHER' && (
+            <div className="flex items-center justify-between p-2.5 bg-slate-800/60 border border-slate-800 rounded-xl text-xs">
+              <span className="text-slate-300 font-bold">Mute All Students</span>
+              <button
+                onClick={() => setStudentMicsDisabled(!studentMicsDisabled)}
+                className={`px-3 py-1 rounded-lg font-bold text-[11px] transition-all ${
+                  studentMicsDisabled ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                }`}
+              >
+                {studentMicsDisabled ? 'All Muted' : 'Mute All'}
+              </button>
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto space-y-2">
+            {filteredParticipants.map((p) => (
+              <div key={p.id} className="p-3 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-xs shrink-0">
+                    {p.name[0]}
                   </div>
-                ) : (
-                  <span className="inline-block text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded font-bold">
-                    Pending Answer
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate">{p.name}</p>
+                    <span className="text-[10px] text-slate-400">{p.role}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {p.isHandRaised && (
+                    <span className="p-1 bg-amber-500/20 text-amber-400 rounded-md text-xs" title="Hand Raised">
+                      ✋
+                    </span>
+                  )}
+                  <span className={`material-symbols-outlined text-base ${p.isMuted ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {p.isMuted ? 'mic_off' : 'mic'}
                   </span>
-                )}
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* TAB 3: LIVE POLLS */}
-      {activeTab === 'polls' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 overflow-y-auto space-y-4">
-          {user.role === 'TEACHER' && (
-            <button 
-              onClick={() => setCreatePollOpen(!createPollOpen)}
-              className="w-full py-2.5 bg-[#8ab4f8] text-black font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 hover:opacity-90"
-            >
-              <span className="material-symbols-outlined text-sm">add_circle</span>
-              <span>Create New Poll</span>
-            </button>
-          )}
-
-          {createPollOpen && (
-            <form onSubmit={handleCreatePoll} className="bg-[#28292c] border border-white/10 p-3 rounded-xl space-y-2 text-xs">
-              <input 
-                type="text" 
-                placeholder="Poll Question..." 
-                required
-                className="w-full p-2 bg-[#3c4043] border border-white/10 rounded-lg text-white"
-                value={pollQuestionInput}
-                onChange={(e) => setPollQuestionInput(e.target.value)}
-              />
-              <input 
-                type="text" 
-                placeholder="Option 1" 
-                required
-                className="w-full p-2 bg-[#3c4043] border border-white/10 rounded-lg text-white"
-                value={pollOption1}
-                onChange={(e) => setPollOption1(e.target.value)}
-              />
-              <input 
-                type="text" 
-                placeholder="Option 2" 
-                required
-                className="w-full p-2 bg-[#3c4043] border border-white/10 rounded-lg text-white"
-                value={pollOption2}
-                onChange={(e) => setPollOption2(e.target.value)}
-              />
-              <button type="submit" className="w-full py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-500">
-                Launch Live Poll
-              </button>
-            </form>
-          )}
-
-          {polls.map((p) => (
-            <div key={p.id} className="bg-[#28292c] border border-white/10 p-3.5 rounded-xl space-y-3 text-xs">
-              <h4 className="font-bold text-white text-sm">{p.question}</h4>
-              <div className="space-y-2">
-                {p.options.map((opt, idx) => {
-                  const pct = p.totalVotes > 0 ? Math.round((opt.votes / p.totalVotes) * 100) : 0;
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => handleVotePoll(p.id, idx)}
-                      className={`w-full p-2.5 rounded-xl text-left border relative overflow-hidden transition-all ${
-                        selectedPollOption === idx && votedPollId === p.id 
-                          ? 'border-[#8ab4f8] bg-[#8ab4f8]/20' 
-                          : 'border-white/10 bg-[#3c4043] hover:border-white/30'
-                      }`}
-                    >
-                      <div className="absolute left-0 top-0 bottom-0 bg-[#8ab4f8]/30 transition-all" style={{ width: `${pct}%` }}></div>
-                      <div className="relative z-10 flex justify-between font-semibold">
-                        <span>{opt.text}</span>
-                        <span>{pct}% ({opt.votes})</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-[10px] text-gray-400 text-right">{p.totalVotes} Total Votes</p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* TAB 4: SHARED LECTURE NOTES */}
-      {activeTab === 'notes' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-300">Class Lecture Notes</span>
-            <button 
-              onClick={handleDownloadNotes}
-              className="px-2.5 py-1 bg-[#8ab4f8] text-black font-bold text-[11px] rounded-lg flex items-center gap-1 hover:opacity-90"
-            >
-              <span className="material-symbols-outlined text-xs">download</span> Export Notes
-            </button>
-          </div>
-          <textarea
-            className="flex-1 w-full bg-[#28292c] border border-white/10 rounded-xl p-3 text-xs text-gray-200 font-mono focus:outline-none focus:border-[#8ab4f8] resize-none"
-            value={notesText}
-            onChange={(e) => setNotesText(e.target.value)}
-          />
-        </div>
-      )}
-
-      {/* TAB 5: CLASS RESOURCES & FILES */}
+      {/* TAB CONTENT 3: RESOURCES */}
       {activeTab === 'resources' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 overflow-y-auto space-y-3 text-xs">
-          <h4 className="font-bold text-gray-300 uppercase text-[10px] tracking-wider">Class Materials & Handouts</h4>
+        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+          <h4 className="text-xs font-bold text-slate-300">Shared Class Materials & Handouts</h4>
           {resources.map((res) => (
-            <div key={res.id} className="bg-[#28292c] border border-white/10 p-3 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2.5 overflow-hidden">
-                <span className="material-symbols-outlined text-[#8ab4f8]">description</span>
-                <div className="truncate">
-                  <p className="font-bold text-white truncate">{res.name}</p>
-                  <span className="text-[10px] text-gray-400">{res.size} • {res.type}</span>
+            <div key={res.id} className="p-3.5 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="material-symbols-outlined text-red-400 text-2xl">picture_as_pdf</span>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate">{res.name}</p>
+                  <p className="text-[10px] text-slate-400">{res.size}</p>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => alert(`Downloading ${res.name}...`)}
-                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors shrink-0"
-                title="Download Resource"
+                className="p-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-lg transition-all"
               >
                 <span className="material-symbols-outlined text-sm">download</span>
               </button>
@@ -441,78 +247,6 @@ export default function SidebarPanel({
         </div>
       )}
 
-      {/* TAB 6: REAL ROOM PARTICIPANTS & TEACHER CONTROLS */}
-      {activeTab === 'participants' && (
-        <div className="flex-1 flex flex-col min-h-0 bg-[#1e1e1e] p-3 space-y-3 text-xs overflow-y-auto">
-          {user.role === 'TEACHER' && (
-            <div className="bg-[#28292c] border border-white/10 p-3 rounded-xl space-y-2">
-              <h4 className="font-bold text-[#fbbc04] uppercase text-[10px] tracking-wider">Host Controls</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  onClick={() => setStudentMicsDisabled(!studentMicsDisabled)}
-                  className={`p-2 rounded-lg font-bold text-[11px] transition-colors ${
-                    studentMicsDisabled ? 'bg-red-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  {studentMicsDisabled ? 'Mics Disabled' : 'Disable Mics'}
-                </button>
-
-                <button 
-                  onClick={() => setStudentCamsDisabled(!studentCamsDisabled)}
-                  className={`p-2 rounded-lg font-bold text-[11px] transition-colors ${
-                    studentCamsDisabled ? 'bg-red-600 text-white' : 'bg-white/10 text-white hover:bg-white/20'
-                  }`}
-                >
-                  {studentCamsDisabled ? 'Cams Disabled' : 'Disable Cams'}
-                </button>
-              </div>
-
-              <button 
-                onClick={onToggleLock}
-                className="w-full py-2 bg-amber-500/20 text-amber-300 font-bold rounded-lg border border-amber-500/30 flex items-center justify-center gap-1"
-              >
-                <span className="material-symbols-outlined text-xs">{isLocked ? 'lock' : 'lock_open'}</span>
-                <span>{isLocked ? 'Unlock Classroom' : 'Lock Classroom'}</span>
-              </button>
-            </div>
-          )}
-
-          <input 
-            type="text" 
-            placeholder="Search members..."
-            className="w-full p-2 bg-[#3c4043] border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none"
-            value={searchMember}
-            onChange={(e) => setSearchMember(e.target.value)}
-          />
-
-          <div className="space-y-2">
-            {filteredMembers.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-2 rounded-xl bg-[#28292c] border border-white/5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-[#3c4043] flex items-center justify-center text-xs font-bold text-white">
-                    {m.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-white">{m.name}</p>
-                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                      m.role === 'TEACHER' ? 'bg-[#fbbc04]/20 text-[#fbbc04]' : 'bg-white/10 text-gray-300'
-                    }`}>
-                      {m.role === 'TEACHER' ? 'Host Teacher' : 'Student'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className={`material-symbols-outlined text-sm ${m.isMuted ? 'text-red-400' : 'text-green-400'}`}>
-                    {m.isMuted ? 'mic_off' : 'mic'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-    </aside>
+    </div>
   );
 }

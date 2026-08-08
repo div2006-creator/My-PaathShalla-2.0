@@ -141,37 +141,25 @@ export default function ClientLayout({ children }) {
   const isLivePage = pathname === '/live';
   const isTeacher = user?.role === 'TEACHER';
 
-  // Distinct Teacher Navigation Items
+  // Distinct Teacher Navigation Items (4 Core Workflows Focused)
   const teacherNavItems = [
     { href: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/teacher/classes', label: 'My Classes', icon: 'class' },
-    { href: '/schedule', label: 'Schedule', icon: 'calendar_today' },
+    { href: '/teacher/classes', label: 'Classes', icon: 'class' },
     { href: '/live', label: 'Live Classes', icon: 'sensors' },
-    { href: '/teacher/students', label: 'Students', icon: 'group' },
-    { href: '/teacher/attendance', label: 'Attendance', icon: 'how_to_reg' },
-    { href: '/assignments', label: 'Assignments', icon: 'assignment' },
-    { href: '/tests', label: 'Test Series', icon: 'quiz' },
-    { href: '/materials', label: 'Study Material', icon: 'folder' },
     { href: '/recordings', label: 'Recordings', icon: 'videocam' },
-    { href: '/doubts', label: 'Doubt Desk', icon: 'help_outline' },
-    { href: '/teacher/announcements', label: 'Announcements', icon: 'campaign' },
-    { href: '/teacher/analytics', label: 'Analytics', icon: 'analytics' },
+    { href: '/assignments', label: 'Assignments', icon: 'assignment' },
+    { href: '/teacher/attendance', label: 'Attendance', icon: 'how_to_reg' },
     { href: '/profile', label: 'Profile', icon: 'person' },
   ];
 
-  // Distinct Student Navigation Items
+  // Distinct Student Navigation Items (4 Core Workflows Focused)
   const studentNavItems = [
-    { href: '/dashboard', label: 'Overview', icon: 'dashboard' },
-    { href: '/courses', label: 'My Courses', icon: 'school' },
+    { href: '/dashboard', label: 'Home', icon: 'dashboard' },
     { href: '/live', label: 'Live Classes', icon: 'sensors' },
-    { href: '/schedule', label: 'Schedule', icon: 'calendar_today' },
-    { href: '/assignments', label: 'Assignments', icon: 'assignment' },
-    { href: '/tests', label: 'Test Series', icon: 'quiz' },
-    { href: '/dpp', label: 'DPP Practice', icon: 'fitness_center' },
-    { href: '/doubts', label: 'Ask Doubts', icon: 'help_outline' },
-    { href: '/materials', label: 'Study Library', icon: 'menu_book' },
     { href: '/recordings', label: 'Recordings', icon: 'videocam' },
-    { href: '/profile', label: 'My Profile', icon: 'person' },
+    { href: '/assignments', label: 'Assignments', icon: 'assignment' },
+    { href: '/teacher/attendance', label: 'Attendance', icon: 'how_to_reg' },
+    { href: '/profile', label: 'Profile', icon: 'person' },
   ];
 
   const navItems = isTeacher ? teacherNavItems : studentNavItems;
