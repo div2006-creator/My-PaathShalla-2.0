@@ -24,8 +24,34 @@ const DEFAULT_USER = {
 export default function ClientLayout({ children }) {
   const [user, setUser] = useState(DEFAULT_USER);
   const [loading, setLoading] = useState(true);
+  const [theme, setTheme] = useState('dark');
   const pathname = usePathname();
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('paathshalla_theme') || 'dark';
+      setTheme(savedTheme);
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('paathshalla_theme', newTheme);
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
 
   const refreshUser = async () => {
     try {
@@ -92,7 +118,7 @@ export default function ClientLayout({ children }) {
   // Login page has no shell
   if (pathname === '/login') {
     return (
-      <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole }}>
+      <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole, theme, toggleTheme }}>
         {children}
       </AuthContext.Provider>
     );
@@ -109,7 +135,7 @@ export default function ClientLayout({ children }) {
   ];
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole }}>
+    <AuthContext.Provider value={{ user, loading, logout, refreshUser, toggleRole, theme, toggleTheme }}>
       {/* Background Texture */}
       <div className="fixed inset-0 pointer-events-none chalk-texture z-0"></div>
 
@@ -150,8 +176,16 @@ export default function ClientLayout({ children }) {
             })}
           </nav>
 
-          {/* Sidebar Footer User Card */}
-          <div className="mt-auto border-t border-outline-variant/60 pt-4 flex flex-col gap-3 px-2">
+          {/* Sidebar Footer User Card & Theme Switcher */}
+          <div className="mt-auto border-t border-outline-variant/60 pt-4 flex flex-col gap-2 px-2">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-bold rounded-xl border border-outline-variant transition-all"
+            >
+              <span className="material-symbols-outlined text-base">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+              <span>{theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
+            </button>
+
             <button
               onClick={toggleRole}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-xl border border-secondary/30 hover:scale-[0.98] transition-all"
@@ -160,7 +194,7 @@ export default function ClientLayout({ children }) {
               <span>{user.role === 'TEACHER' ? 'Switch to Student' : 'Switch to Teacher'}</span>
             </button>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-1">
               <div className="flex items-center gap-3 min-w-0">
                 <img
                   className="w-10 h-10 rounded-full border border-outline-variant object-cover shrink-0"
@@ -189,6 +223,14 @@ export default function ClientLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-surface-container-high hover:bg-surface-container-highest border border-outline-variant text-on-surface transition-all"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <span className="material-symbols-outlined text-[18px]">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            </button>
+
             <button
               onClick={toggleRole}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary-container text-on-secondary-container text-[12px] font-bold border border-secondary/30 hover:scale-[0.98] transition-all shadow-sm"
@@ -234,6 +276,13 @@ export default function ClientLayout({ children }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 bg-surface-container-high text-on-surface rounded-lg border border-outline-variant flex items-center justify-center"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <span className="material-symbols-outlined text-sm">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            </button>
             <button 
               onClick={toggleRole}
               className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
