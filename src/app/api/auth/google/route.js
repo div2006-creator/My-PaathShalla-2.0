@@ -13,7 +13,7 @@ export async function GET(request) {
   }
 
   const host = request.headers.get('host');
-  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
