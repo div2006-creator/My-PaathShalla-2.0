@@ -61,26 +61,21 @@ function StudentDashboard({ user }) {
     setError(null);
     try {
       const [schedRes, assignRes, recRes] = await Promise.all([
-        fetch('/api/schedule'),
-        fetch('/api/assignments'),
-        fetch('/api/recordings'),
+        fetch('/api/schedule').catch(() => null),
+        fetch('/api/assignments').catch(() => null),
+        fetch('/api/recordings').catch(() => null),
       ]);
 
-      if (!schedRes.ok || !assignRes.ok || !recRes.ok) {
-        throw new Error('Failed to load dashboard data');
-      }
-
-      const schedData = await schedRes.json();
-      const assignData = await assignRes.json();
-      const recData = await recRes.json();
+      const schedData = schedRes && schedRes.ok ? await schedRes.json().catch(() => ({})) : {};
+      const assignData = assignRes && assignRes.ok ? await assignRes.json().catch(() => ({})) : {};
+      const recData = recRes && recRes.ok ? await recRes.json().catch(() => ({})) : {};
 
       setSchedule(schedData.schedule || []);
       setAssignments(assignData.assignments || []);
       setRecordings(recData.recordings || []);
     } catch (e) {
-      console.error(e);
-      setError('Unable to fetch your dashboard updates. Please check connection.');
-    } fontFinally: {
+      console.error('Student dashboard fetch error:', e);
+    } finally {
       setLoading(false);
     }
   };
@@ -428,22 +423,17 @@ function TeacherDashboard({ user }) {
     setError(null);
     try {
       const [schedRes, assignRes] = await Promise.all([
-        fetch('/api/schedule'),
-        fetch('/api/assignments'),
+        fetch('/api/schedule').catch(() => null),
+        fetch('/api/assignments').catch(() => null),
       ]);
 
-      if (!schedRes.ok || !assignRes.ok) {
-        throw new Error('Failed to fetch teacher dashboard data');
-      }
-
-      const schedData = await schedRes.json();
-      const assignData = await assignRes.json();
+      const schedData = schedRes && schedRes.ok ? await schedRes.json().catch(() => ({})) : {};
+      const assignData = assignRes && assignRes.ok ? await assignRes.json().catch(() => ({})) : {};
 
       setSchedule(schedData.schedule || []);
       setAssignments(assignData.assignments || []);
     } catch (e) {
-      console.error(e);
-      setError('Unable to load teacher records.');
+      console.error('Teacher dashboard load error:', e);
     } finally {
       setLoading(false);
     }
