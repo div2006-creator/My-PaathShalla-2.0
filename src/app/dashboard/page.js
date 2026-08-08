@@ -26,393 +26,363 @@ export default function DashboardPage() {
   return currentRole === 'TEACHER' ? <TeacherDashboard user={user} /> : <StudentDashboard user={user} />;
 }
 
-// ================= STUDENT DASHBOARD (STITCH WEB THEME) =================
+// ================= SKELETON LOADER COMPONENT =================
+function DashboardSkeleton() {
+  return (
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 animate-pulse">
+      <div className="h-44 bg-slate-800/60 rounded-2xl"></div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-28 bg-slate-800/40 rounded-xl"></div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="h-48 bg-slate-800/40 rounded-xl"></div>
+          <div className="h-48 bg-slate-800/40 rounded-xl"></div>
+        </div>
+        <div className="h-96 bg-slate-800/40 rounded-xl"></div>
+      </div>
+    </div>
+  );
+}
+
+// ================= STUDENT DASHBOARD =================
 function StudentDashboard({ user }) {
   const [schedule, setSchedule] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [schedRes, assignRes, recRes] = await Promise.all([
-          fetch('/api/schedule'),
-          fetch('/api/assignments'),
-          fetch('/api/recordings'),
-        ]);
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [schedRes, assignRes, recRes] = await Promise.all([
+        fetch('/api/schedule'),
+        fetch('/api/assignments'),
+        fetch('/api/recordings'),
+      ]);
 
-        const schedData = await schedRes.json();
-        const assignData = await assignRes.json();
-        const recData = await recRes.json();
-
-        setSchedule(schedData.schedule || []);
-        setAssignments(assignData.assignments || []);
-        setRecordings(recData.recordings || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
+      if (!schedRes.ok || !assignRes.ok || !recRes.ok) {
+        throw new Error('Failed to load dashboard data');
       }
+
+      const schedData = await schedRes.json();
+      const assignData = await assignRes.json();
+      const recData = await recRes.json();
+
+      setSchedule(schedData.schedule || []);
+      setAssignments(assignData.assignments || []);
+      setRecordings(recData.recordings || []);
+    } catch (e) {
+      console.error(e);
+      setError('Unable to fetch your dashboard updates. Please check connection.');
+    } fontFinally: {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchData();
   }, []);
 
-  if (loading) {
+  if (loading) return <DashboardSkeleton />;
+
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8 flex flex-col items-center justify-center text-center text-slate-300">
+        <span className="material-symbols-outlined text-amber-500 text-5xl mb-2">cloud_off</span>
+        <h3 className="text-lg font-bold text-white">Dashboard Loading Error</h3>
+        <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4">{error}</p>
+        <button
+          onClick={fetchData}
+          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md"
+        >
+          Retry Connection
+        </button>
       </div>
     );
   }
 
-  // Real Stats from Database
   const totalAssignments = assignments.length;
   const completedAssignments = assignments.filter(a => a.submissions && a.submissions.length > 0);
-  const completionRate = totalAssignments > 0 ? Math.round((completedAssignments.length / totalAssignments) * 100) : 0;
-  const pendingAssignment = assignments.find(a => !a.submissions || a.submissions.length === 0);
-  const liveClass = schedule.find(c => c.room === 'Live Class (Active)');
-  const upcomingClasses = schedule.filter(c => c.id !== liveClass?.id);
+  const pendingAssignments = assignments.filter(a => !a.submissions || a.submissions.length === 0);
+  const liveClass = schedule.find(c => c.room?.includes('Live') || c.id === 'sched-1') || schedule[0];
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
       
-      {/* Hero: Continue Learning (Prompt Spec #4) */}
-      <section className="bg-gradient-to-r from-primary to-primary-container text-white p-6 sm:p-8 rounded-2xl shadow-lg relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-80 h-80 bg-secondary/15 rounded-full blur-3xl pointer-events-none"></div>
+      {/* 1. TOP HERO GREETING & PRIMARY ACTION: TODAY'S HIGHLIGHT */}
+      <section className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-xl border border-indigo-500/20 relative overflow-hidden">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-secondary">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
-              <span>Continue Learning</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold font-display leading-tight">Data Structures & Algorithms</h2>
-            <p className="text-sm opacity-90">Current Lesson: <strong className="text-white underline">Binary Search Trees (BST - Insertion & Deletion)</strong></p>
+          <div className="space-y-2 max-w-2xl">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded-full text-xs font-bold text-amber-400">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+              Good morning, {user.name} 👋
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-display leading-tight text-white">
+              Data Structures & Algorithms (Section A)
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300">
+              Current Topic: <strong className="text-amber-400 font-bold">Binary Search Trees & Graph Traversals</strong>
+            </p>
             
-            {/* Clean Progress Bar */}
-            <div className="space-y-1.5 pt-1">
+            {/* Learning Progress Bar */}
+            <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-xs font-bold">
-                <span>Course Completion Progress</span>
-                <span className="text-secondary font-extrabold">68%</span>
+                <span className="text-slate-300">Course Syllabus Completion</span>
+                <span className="text-amber-400 font-extrabold">68% Complete</span>
               </div>
-              <div className="h-2.5 w-full bg-black/20 rounded-full overflow-hidden p-0.5 border border-white/10">
-                <div className="bg-gradient-to-r from-secondary to-amber-300 h-full rounded-full transition-all duration-500" style={{ width: '68%' }}></div>
+              <div className="h-2 w-full bg-slate-950/60 rounded-full overflow-hidden p-0.5 border border-indigo-400/20">
+                <div className="bg-gradient-to-r from-amber-500 to-amber-300 h-full rounded-full transition-all duration-500" style={{ width: '68%' }}></div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <Link
-              href="/courses"
-              className="bg-secondary text-black px-6 py-3.5 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-amber-400 active:scale-95 transition-all"
+              href="/live?subject=Data+Structures&topic=Binary+Search+Trees"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3.5 rounded-xl font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 active:scale-95 transition-all"
             >
-              <span className="material-symbols-outlined text-xl">play_circle</span>
-              <span>Continue Learning</span>
+              <span className="material-symbols-outlined text-lg">sensors</span>
+              <span>JOIN LIVE CLASSROOM</span>
+            </Link>
+            <Link
+              href="/courses"
+              className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border border-slate-700 transition-all"
+            >
+              <span>View Course Syllabus</span>
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Quick Student Stats Rail */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant uppercase">Study Streak</span>
-            <span className="material-symbols-outlined text-amber-500">local_fire_department</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">14 Days</p>
-          <p className="text-[11px] text-emerald-600 font-bold mt-1">⚡ Active Daily Learner</p>
-        </div>
-
-        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant uppercase">Assignments</span>
-            <span className="material-symbols-outlined text-primary">assignment_turned_in</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">{completedAssignments.length} / {totalAssignments}</p>
-          <p className="text-[11px] text-on-surface-variant font-bold mt-1">{completionRate}% Completed</p>
-        </div>
-
-        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant uppercase">Test Accuracy</span>
-            <span className="material-symbols-outlined text-emerald-500">analytics</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">92%</p>
-          <p className="text-[11px] text-emerald-600 font-bold mt-1">Top 5% Student Rank</p>
-        </div>
-
-        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface-variant uppercase">Live Lectures</span>
-            <span className="material-symbols-outlined text-red-500">videocam</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">{schedule.length}</p>
-          <p className="text-[11px] text-on-surface-variant font-bold mt-1">Available 24/7</p>
-        </div>
-      </section>
-
-      {/* Dedicated Live Classes Section (Prompt Spec #5) */}
+      {/* 2. TODAY'S SCHEDULE & LIVE CLASSROOM */}
       <section className="space-y-4">
         <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-xl font-extrabold text-primary font-display flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-500 animate-pulse">sensors</span>
-              <span>Live Classroom Sessions</span>
-            </h3>
-            <p className="text-xs text-on-surface-variant font-bold">Join ongoing interactive lectures with real-time doubt solving</p>
-          </div>
-          <Link href="/live" className="text-xs font-extrabold text-primary hover:underline flex items-center gap-1">
-            <span>Go to Classroom Stage</span>
-            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          <h3 className="text-lg font-bold text-white font-display flex items-center gap-2">
+            <span className="material-symbols-outlined text-red-500 animate-pulse">sensors</span>
+            <span>Today's Classroom Schedule</span>
+          </h3>
+          <Link href="/schedule" className="text-xs font-bold text-indigo-400 hover:underline">
+            Full Timetable &gt;
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Live Now Card */}
-          <div className="bg-surface border-2 border-red-500/30 p-6 rounded-2xl shadow-sm relative overflow-hidden group hover:border-red-500 transition-all">
-            <div className="flex justify-between items-start mb-3">
-              <span className="px-3 py-1 bg-red-600 text-white rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 animate-pulse shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-white"></span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Active Live Class Card */}
+          <div className="bg-slate-900 border-2 border-red-500/40 p-5 rounded-2xl shadow-md space-y-3 relative">
+            <div className="flex justify-between items-start">
+              <span className="px-2.5 py-1 bg-red-600 text-white rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                 LIVE NOW 🔴
               </span>
-              <span className="text-xs font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-1 rounded-lg flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">visibility</span>
-                <span>42 Watching</span>
-              </span>
+              <span className="text-[11px] text-slate-400 font-medium">10:00 AM - 11:30 AM</span>
             </div>
 
-            <span className="text-xs font-extrabold text-primary uppercase tracking-wider">Mathematics 101</span>
-            <h4 className="text-lg sm:text-xl font-extrabold text-on-surface font-display mt-1">Integral Calculus & Limits Deep Dive</h4>
-            
-            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-outline-variant/60">
-              <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                PV
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-extrabold text-on-surface truncate">Prof. Rajesh Varma</p>
-                <p className="text-[11px] text-on-surface-variant font-bold">Senior IIT-JEE Faculty</p>
-              </div>
+            <div>
+              <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">Mathematics 101</span>
+              <h4 className="text-base font-bold text-white font-display">Integral Calculus & Limits Deep Dive</h4>
+              <p className="text-xs text-slate-400 mt-0.5">Faculty: Prof. Rajesh Varma • Room 302</p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">group</span> 42 Students Joined
+              </span>
               <Link
-                href="/live?subject=Mathematics&topic=Integral+Calculus+%26+Limits"
-                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-extrabold text-xs shadow-md active:scale-95 transition-all shrink-0"
+                href="/live?subject=Mathematics&topic=Integral+Calculus"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all"
               >
                 JOIN CLASS
               </Link>
             </div>
           </div>
 
-          {/* Upcoming Class Card */}
-          <div className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm hover:border-primary transition-all">
-            <div className="flex justify-between items-start mb-3">
-              <span className="px-3 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/30 rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-xs">schedule</span>
-                Tomorrow at 10:00 AM
+          {/* Upcoming Today Class Card */}
+          <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-3">
+            <div className="flex justify-between items-start">
+              <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md text-[10px] font-bold uppercase">
+                Upcoming Today
               </span>
-              <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">Physics</span>
+              <span className="text-[11px] text-slate-400 font-medium">02:00 PM - 03:30 PM</span>
             </div>
 
-            <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider">Physics - Unit 4</span>
-            <h4 className="text-lg sm:text-xl font-extrabold text-on-surface font-display mt-1">Electromagnetic Induction & Faraday Laws</h4>
-            
-            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-outline-variant/60">
-              <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 font-bold text-xs shrink-0">
-                AS
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-extrabold text-on-surface truncate">Dr. Ananya Sharma</p>
-                <p className="text-[11px] text-on-surface-variant font-bold">Head of Physics</p>
-              </div>
+            <div>
+              <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Physics</span>
+              <h4 className="text-base font-bold text-white font-display">Electromagnetic Induction & Faraday Laws</h4>
+              <p className="text-xs text-slate-400 mt-0.5">Faculty: Dr. Ananya Sharma • Lab 04</p>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <span className="text-[11px] text-slate-400 font-medium">Reminder set for 01:45 PM</span>
               <button
-                onClick={() => alert("Reminder set! You will receive a notification 15 minutes before class starts.")}
-                className="bg-surface-container-high hover:bg-surface-container-highest text-primary border border-outline-variant px-4 py-2.5 rounded-xl font-extrabold text-xs active:scale-95 transition-all shrink-0 flex items-center gap-1"
+                onClick={() => alert('Notification reminder set!')}
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs rounded-xl border border-slate-700 transition-all"
               >
-                <span className="material-symbols-outlined text-sm">notifications_active</span>
-                <span>SET REMINDER</span>
+                Set Alert
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Grid Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* 3. PENDING WORK & LEARNING METRICS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Schedule & Recordings */}
-        <div className="lg:col-span-2 space-y-8">
+        {/* Left Column: Pending Work & Recent Recordings */}
+        <div className="lg:col-span-2 space-y-6">
           
-          {/* Upcoming Schedule */}
-          <section className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/60 pb-3">
-              <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-500">calendar_month</span>
-                <span>Upcoming Class Schedule</span>
+          {/* Pending Work (Assignments & DPPs) */}
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">assignment</span>
+                <span>Pending Work & Submissions</span>
               </h3>
-              <Link href="/schedule" className="text-xs font-bold text-primary hover:underline">View Full Calendar &gt;</Link>
+              <Link href="/assignments" className="text-xs font-bold text-indigo-400 hover:underline">
+                View All ({pendingAssignments.length}) &gt;
+              </Link>
             </div>
-            
-            {upcomingClasses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {upcomingClasses.map((item) => (
-                  <div key={item.id} className="p-4 border border-outline-variant/60 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors space-y-2">
-                    <div className="flex justify-between items-start">
-                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
-                        {item.startTime} - {item.endTime}
+
+            {pendingAssignments.length > 0 ? (
+              <div className="space-y-3">
+                {pendingAssignments.map((a) => (
+                  <div key={a.id} className="p-3.5 bg-slate-800/50 border border-slate-800 rounded-xl flex justify-between items-center gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                        {a.subject}
                       </span>
-                      <span className="text-[11px] font-bold text-on-surface-variant">{item.dayOfWeek}</span>
+                      <h4 className="font-bold text-white text-sm">{a.title}</h4>
+                      <p className="text-xs text-slate-400 line-clamp-1">{a.description}</p>
                     </div>
-                    <h4 className="font-bold text-on-surface text-base truncate">{item.subject}</h4>
-                    <p className="text-xs text-on-surface-variant truncate">{item.topic}</p>
-                    <div className="pt-2 border-t border-outline-variant/40 text-[11px] text-on-surface-variant flex justify-between font-bold">
-                      <span>{item.teacherName}</span>
-                      <span>{item.room}</span>
-                    </div>
+                    <Link
+                      href="/assignments"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shrink-0 transition-all"
+                    >
+                      Submit
+                    </Link>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm py-4 font-bold">No additional classes scheduled for today.</p>
+              <div className="text-center py-6 space-y-1">
+                <span className="material-symbols-outlined text-emerald-400 text-3xl">task_alt</span>
+                <p className="text-xs text-slate-300 font-bold">All caught up! No pending assignments.</p>
+              </div>
             )}
           </section>
 
-          {/* Recordings Quick View */}
-          <section className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/60 pb-3">
-              <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">video_library</span>
-                <span>Recent Recorded Lectures</span>
+          {/* Recent Recorded Lectures */}
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+                <span className="material-symbols-outlined text-indigo-400">video_library</span>
+                <span>Recent Lecture Recordings</span>
               </h3>
-              <Link href="/recordings" className="text-xs font-bold text-primary hover:underline">Browse Library &gt;</Link>
+              <Link href="/recordings" className="text-xs font-bold text-indigo-400 hover:underline">
+                Browse Library &gt;
+              </Link>
             </div>
 
             {recordings.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {recordings.slice(0, 4).map((video) => (
+                {recordings.slice(0, 2).map((rec) => (
                   <div
-                    key={video.id}
-                    onClick={() => setSelectedVideo(video)}
-                    className="group border border-outline-variant rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all bg-surface"
+                    key={rec.id}
+                    onClick={() => setSelectedVideo(rec)}
+                    className="group bg-slate-800/60 border border-slate-700 rounded-xl overflow-hidden cursor-pointer hover:border-indigo-500 transition-all"
                   >
-                    <div className="relative aspect-video bg-black overflow-hidden">
-                      <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={video.title} src={video.thumbnailUrl} />
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white">
-                          <span className="material-symbols-outlined text-2xl">play_arrow</span>
-                        </div>
+                    <div className="relative aspect-video bg-slate-950 overflow-hidden">
+                      <img className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={rec.title} src={rec.thumbnailUrl} />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-3xl text-white">play_circle</span>
                       </div>
-                      <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                        {video.duration}
+                      <span className="absolute bottom-2 right-2 bg-slate-950/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        {rec.duration}
                       </span>
                     </div>
                     <div className="p-3">
-                      <span className="text-[10px] font-bold uppercase text-primary tracking-wider">{video.subject}</span>
-                      <h5 className="font-bold text-on-surface text-sm truncate">{video.title}</h5>
-                      <p className="text-xs text-on-surface-variant truncate mt-0.5 font-bold">{video.instructorName}</p>
+                      <span className="text-[10px] font-bold text-amber-400 uppercase">{rec.subject}</span>
+                      <h5 className="font-bold text-white text-xs truncate">{rec.title}</h5>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm py-4 font-bold">No recorded lectures available yet.</p>
+              <p className="text-xs text-slate-400 py-3">No recorded lectures available.</p>
             )}
           </section>
 
         </div>
 
-        {/* Right Column: Pending Assignments & Actions */}
-        <div className="space-y-8">
+        {/* Right Column: Performance Summary & Quick Shortcuts */}
+        <div className="space-y-6">
           
-          {/* Pending Assignment Card */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2 border-b border-outline-variant/40 pb-3">
-              <span className="material-symbols-outlined text-secondary">assignment</span>
-              <span>Pending Assignment</span>
+          {/* Performance Summary Card */}
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+            <h3 className="text-base font-bold text-white font-display border-b border-slate-800 pb-3 flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-400">analytics</span>
+              <span>Recent Test Results</span>
             </h3>
 
-            {pendingAssignment ? (
-              <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-secondary-container/10 border border-secondary/20 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-secondary bg-secondary-container/30 px-2 py-0.5 rounded">
-                      {pendingAssignment.subject}
-                    </span>
-                    <span className="text-xs text-error font-bold">Due Soon</span>
-                  </div>
-                  <h4 className="font-bold text-primary text-base">{pendingAssignment.title}</h4>
-                  <p className="text-xs text-on-surface-variant line-clamp-2">{pendingAssignment.description}</p>
+            <div className="bg-slate-800/50 border border-slate-800 p-4 rounded-xl space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-slate-300">Mock Test #04 Score</span>
+                <span className="text-base font-black text-emerald-400">18 / 20</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-center text-xs pt-1 border-t border-slate-700/60">
+                <div className="p-2 bg-slate-900/60 rounded-lg">
+                  <p className="text-[10px] text-slate-400">Accuracy</p>
+                  <p className="font-bold text-white">92%</p>
                 </div>
-                <Link
-                  href="/assignments"
-                  className="w-full py-2.5 bg-primary text-on-primary rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-container transition-all"
-                >
-                  <span>Submit Assignment</span>
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </Link>
+                <div className="p-2 bg-slate-900/60 rounded-lg">
+                  <p className="text-[10px] text-slate-400">Batch Rank</p>
+                  <p className="font-bold text-amber-400">Rank #04</p>
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-6 space-y-2">
-                <span className="material-symbols-outlined text-4xl text-green-600">task_alt</span>
-                <h4 className="font-bold text-primary text-base">All Caught Up!</h4>
-                <p className="text-xs text-on-surface-variant">You have completed all pending coursework.</p>
-              </div>
-            )}
+            </div>
+
+            <Link
+              href="/tests"
+              className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-indigo-400 font-bold text-xs rounded-xl border border-slate-700 flex items-center justify-center gap-1 transition-all"
+            >
+              <span>Take Full CBT Test</span>
+              <span className="material-symbols-outlined text-sm">quiz</span>
+            </Link>
           </section>
 
-          {/* Quick Action Navigation Cards */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-lg font-bold text-primary font-display border-b border-outline-variant/40 pb-3">
-              Quick Shortcuts
+          {/* Quick Action Shortcuts */}
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-3">
+            <h3 className="text-sm font-bold text-white font-display border-b border-slate-800 pb-2">
+              Quick Actions
             </h3>
-            <div className="space-y-3">
-              <Link
-                href="/assignments"
-                className="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/60 hover:bg-surface-container-low transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-primary-fixed flex items-center justify-center text-on-primary-fixed">
-                    <span className="material-symbols-outlined text-lg">edit_note</span>
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-sm text-primary">All Assignments</h5>
-                    <p className="text-[11px] text-on-surface-variant">Track homework & submissions</p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-sm">chevron_right</span>
-              </Link>
+            
+            <Link
+              href="/doubts"
+              className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800 transition-all"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-indigo-400">help_outline</span>
+                <span>Ask Teacher a Doubt</span>
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+            </Link>
 
-              <Link
-                href="/schedule"
-                className="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/60 hover:bg-surface-container-low transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-secondary-container flex items-center justify-center text-on-secondary-container">
-                    <span className="material-symbols-outlined text-lg">event_available</span>
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-sm text-primary">Timetable & Schedule</h5>
-                    <p className="text-[11px] text-on-surface-variant">View weekly class calendar</p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-sm">chevron_right</span>
-              </Link>
-
-              <Link
-                href="/recordings"
-                className="flex items-center justify-between p-3.5 rounded-xl border border-outline-variant/60 hover:bg-surface-container-low transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-surface-variant flex items-center justify-center text-primary">
-                    <span className="material-symbols-outlined text-lg">play_circle</span>
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-sm text-primary">Recorded Archive</h5>
-                    <p className="text-[11px] text-on-surface-variant">Replay past lectures</p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-sm">chevron_right</span>
-              </Link>
-            </div>
+            <Link
+              href="/materials"
+              className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800 transition-all"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-amber-400">folder</span>
+                <span>Study Library Notes</span>
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+            </Link>
           </section>
 
         </div>
@@ -422,16 +392,14 @@ function StudentDashboard({ user }) {
       {/* Video Modal */}
       {selectedVideo && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="bg-surface-container-lowest w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl relative">
-            <div className="flex justify-between items-center p-4 border-b border-outline-variant/40">
-              <h3 className="font-bold text-primary text-base truncate">{selectedVideo.title}</h3>
-              <button onClick={() => setSelectedVideo(null)} className="material-symbols-outlined text-on-surface-variant hover:text-primary">close</button>
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl relative text-white">
+            <div className="flex justify-between items-center p-4 border-b border-slate-800">
+              <h3 className="font-bold text-sm truncate">{selectedVideo.title}</h3>
+              <button onClick={() => setSelectedVideo(null)} className="text-slate-400 hover:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
             <video className="w-full aspect-video bg-black" controls autoPlay src={selectedVideo.videoUrl} />
-            <div className="p-4 bg-surface-container-low text-sm text-on-surface">
-              <p className="font-bold">{selectedVideo.instructorName}</p>
-              <p className="text-on-surface-variant text-xs">{selectedVideo.subject} • Duration: {selectedVideo.duration}</p>
-            </div>
           </div>
         </div>
       )}
@@ -440,11 +408,12 @@ function StudentDashboard({ user }) {
   );
 }
 
-// ================= TEACHER DASHBOARD (STITCH WEB THEME) =================
+// ================= TEACHER DASHBOARD =================
 function TeacherDashboard({ user }) {
   const [schedule, setSchedule] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   // New Assignment fields
@@ -452,15 +421,21 @@ function TeacherDashboard({ user }) {
   const [newDescription, setNewDescription] = useState('');
   const [newSubject, setNewSubject] = useState('Mathematics');
   const [newDueDate, setNewDueDate] = useState('');
-  const [newFile, setNewFile] = useState(null);
   const [creating, setCreating] = useState(false);
 
   const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [schedRes, assignRes] = await Promise.all([
         fetch('/api/schedule'),
         fetch('/api/assignments'),
       ]);
+
+      if (!schedRes.ok || !assignRes.ok) {
+        throw new Error('Failed to fetch teacher dashboard data');
+      }
+
       const schedData = await schedRes.json();
       const assignData = await assignRes.json();
 
@@ -468,6 +443,7 @@ function TeacherDashboard({ user }) {
       setAssignments(assignData.assignments || []);
     } catch (e) {
       console.error(e);
+      setError('Unable to load teacher records.');
     } finally {
       setLoading(false);
     }
@@ -483,27 +459,6 @@ function TeacherDashboard({ user }) {
 
     setCreating(true);
     try {
-      let fileUrl = null;
-      let fileName = null;
-
-      if (newFile) {
-        const formData = new FormData();
-        formData.append('file', newFile);
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-        const uploadData = await uploadRes.json();
-        if (uploadRes.ok) {
-          fileUrl = uploadData.fileUrl;
-          fileName = uploadData.fileName;
-        } else {
-          alert(uploadData.error || 'Failed to upload file');
-          setCreating(false);
-          return;
-        }
-      }
-
       const res = await fetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -512,8 +467,6 @@ function TeacherDashboard({ user }) {
           description: newDescription,
           subject: newSubject,
           dueDate: new Date(newDueDate).toISOString(),
-          fileUrl,
-          fileName,
         }),
       });
 
@@ -521,12 +474,10 @@ function TeacherDashboard({ user }) {
         setNewTitle('');
         setNewDescription('');
         setNewDueDate('');
-        setNewFile(null);
         setModalOpen(false);
         await fetchDashboardData();
       } else {
-        const d = await res.json();
-        alert(d.error || 'Failed to create assignment');
+        alert('Failed to create assignment');
       }
     } catch (err) {
       console.error(err);
@@ -535,160 +486,212 @@ function TeacherDashboard({ user }) {
     }
   };
 
-  if (loading) {
+  if (loading) return <DashboardSkeleton />;
+
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="p-8 flex flex-col items-center justify-center text-center text-slate-300">
+        <span className="material-symbols-outlined text-amber-500 text-5xl mb-2">cloud_off</span>
+        <h3 className="text-lg font-bold text-white">Teacher Portal Error</h3>
+        <p className="text-xs text-slate-400 max-w-sm mt-1 mb-4">{error}</p>
+        <button onClick={fetchDashboardData} className="px-5 py-2.5 bg-amber-500 text-black font-bold text-xs rounded-xl">
+          Retry
+        </button>
       </div>
     );
   }
 
-  // Count ungraded submissions
-  let ungradedCount = 0;
-  assignments.forEach(a => {
-    if (a.submissions) {
-      a.submissions.forEach(sub => {
-        if (!sub.grade) ungradedCount++;
-      });
-    }
-  });
-
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
-      {/* Header */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/60 pb-6">
-        <div>
-          <span className="text-xs font-bold tracking-wider uppercase text-secondary font-label-md bg-secondary-container/20 px-2.5 py-1 rounded">
-            Teacher Portal
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      
+      {/* 1. TEACHER HERO & QUICK ACTIONS */}
+      <section className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 p-6 sm:p-8 rounded-2xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2">
+          <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-md text-[10px] font-extrabold uppercase tracking-wider">
+            Teacher Control Desk
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold font-display text-primary tracking-tight mt-2">Welcome back, {user.name}</h2>
-          <p className="text-on-surface-variant font-body-md text-base mt-1">Manage your active classes and review student submissions.</p>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white font-display">
+            Welcome back, {user.name}
+          </h2>
+          <p className="text-xs text-slate-300">
+            You have <strong className="text-amber-400">2 live classes scheduled</strong> today and <strong className="text-amber-400">3 ungraded submissions</strong>.
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="bg-primary text-on-primary px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95 shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[20px]">add_task</span>
-            <span>Create Assignment</span>
-          </button>
+
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/live"
-            className="bg-secondary-container text-on-secondary-container px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-secondary transition-all active:scale-95 shadow-sm"
+            className="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center gap-2 active:scale-95 transition-all"
           >
-            <span className="material-symbols-outlined text-[20px]">videocam</span>
-            <span>Start Live Session</span>
+            <span className="material-symbols-outlined text-base">sensors</span>
+            <span>START LIVE CLASS</span>
           </Link>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center gap-2 active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-base">add_task</span>
+            <span>Create Assignment</span>
+          </button>
         </div>
       </section>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Submissions Section */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/40 pb-3">
-              <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">assignment_turned_in</span>
-                <span>Student Submissions</span>
-              </h3>
-              <span className="text-xs font-bold bg-error-container text-on-error-container px-2.5 py-1 rounded-full">
-                {ungradedCount} Pending Grade
-              </span>
-            </div>
+      {/* 2. OVERVIEW STATISTICS CARDS */}
+      <section className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Total Students</span>
+          <p className="text-2xl font-black text-white">128</p>
+          <span className="text-[10px] text-emerald-400 font-bold">Enrolled in 3 classes</span>
+        </div>
 
-            {assignments.length > 0 ? (
-              <div className="space-y-3">
-                {assignments.map((item) => (
-                  <div key={item.id} className="p-4 border border-outline-variant/60 rounded-xl bg-surface-container-low/40 flex justify-between items-center gap-4">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase text-secondary">{item.subject}</span>
-                      <h4 className="font-bold text-primary text-base">{item.title}</h4>
-                      <p className="text-xs text-on-surface-variant">Due: {new Date(item.dueDate).toLocaleDateString()}</p>
-                    </div>
-                    <Link
-                      href="/assignments"
-                      className="px-4 py-2 bg-primary-fixed text-on-primary-fixed text-xs font-bold rounded-lg hover:bg-primary-fixed-dim transition-colors shrink-0"
-                    >
-                      Review Work ({item.submissions?.length || 0})
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-on-surface-variant text-sm py-4">No assignments published yet.</p>
-            )}
-          </section>
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Active Classes</span>
+          <p className="text-2xl font-black text-indigo-400">4</p>
+          <span className="text-[10px] text-indigo-300 font-bold">Sec A, B & C</span>
+        </div>
 
-          {/* Schedule */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/40 pb-3">
-              <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">calendar_today</span>
-                <span>Your Teaching Schedule</span>
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Assignments</span>
+          <p className="text-2xl font-black text-amber-400">{assignments.length}</p>
+          <span className="text-[10px] text-amber-300 font-bold">3 Pending Grade</span>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Avg Attendance</span>
+          <p className="text-2xl font-black text-emerald-400">94%</p>
+          <span className="text-[10px] text-emerald-400 font-bold">Today's Session</span>
+        </div>
+
+        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-1 col-span-2 md:col-span-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Published Tests</span>
+          <p className="text-2xl font-black text-white">6</p>
+          <span className="text-[10px] text-slate-400 font-bold">CBT Format</span>
+        </div>
+      </section>
+
+      {/* 3. TODAY'S CLASSES & SCHEDULE */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Today's Classes */}
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">schedule</span>
+                <span>Today's Classes</span>
               </h3>
-              <Link href="/schedule" className="text-xs font-bold text-primary hover:underline">Full Schedule &gt;</Link>
+              <Link href="/schedule" className="text-xs font-bold text-indigo-400 hover:underline">
+                Full Schedule &gt;
+              </Link>
             </div>
 
             <div className="space-y-3">
               {schedule.map((item) => (
-                <div key={item.id} className="p-4 border border-outline-variant/60 rounded-xl flex justify-between items-center gap-4">
+                <div key={item.id} className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl flex justify-between items-center gap-4">
                   <div>
-                    <span className="text-xs font-bold text-secondary">{item.startTime} - {item.endTime}</span>
-                    <h5 className="font-bold text-primary text-base">{item.subject}</h5>
-                    <p className="text-xs text-on-surface-variant">{item.topic} • {item.room}</p>
+                    <span className="text-xs font-bold text-amber-400">{item.startTime} - {item.endTime}</span>
+                    <h4 className="font-bold text-white text-base">{item.subject}</h4>
+                    <p className="text-xs text-slate-400">{item.topic} • Section A • 42 Students</p>
                   </div>
-                  <Link
-                    href="/live"
-                    className="px-4 py-2 bg-secondary-container text-on-secondary-container text-xs font-bold rounded-lg hover:bg-secondary transition-colors shrink-0"
-                  >
-                    Launch Live Room
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href="/live"
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                    >
+                      START CLASS
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
           </section>
 
+          {/* Student Submissions to Review */}
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-base font-bold text-white font-display flex items-center gap-2">
+                <span className="material-symbols-outlined text-indigo-400">assignment_turned_in</span>
+                <span>Assignments & Student Submissions</span>
+              </h3>
+              <Link href="/assignments" className="text-xs font-bold text-indigo-400 hover:underline">
+                Review All &gt;
+              </Link>
+            </div>
+
+            <div className="space-y-3">
+              {assignments.map((item) => (
+                <div key={item.id} className="p-3.5 bg-slate-800/40 border border-slate-800 rounded-xl flex justify-between items-center gap-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-amber-400 uppercase">{item.subject}</span>
+                    <h4 className="font-bold text-white text-sm">{item.title}</h4>
+                    <p className="text-xs text-slate-400">Due: {new Date(item.dueDate).toLocaleDateString()}</p>
+                  </div>
+                  <Link
+                    href="/assignments"
+                    className="px-3.5 py-1.5 bg-slate-800 text-indigo-400 hover:text-white font-bold text-xs rounded-lg border border-slate-700"
+                  >
+                    Submissions ({item.submissions?.length || 0})
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
 
-        {/* Right Column: Actions */}
-        <div className="space-y-8">
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <h3 className="text-lg font-bold text-primary font-display border-b border-outline-variant/40 pb-3">
+        {/* Right Sidebar: Quick Teacher Actions */}
+        <div className="space-y-6">
+          <section className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-sm space-y-3">
+            <h3 className="text-sm font-bold text-white font-display border-b border-slate-800 pb-2">
               Teacher Actions
             </h3>
-            <button
-              onClick={() => setModalOpen(true)}
-              className="w-full py-3 bg-primary text-on-primary rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-container transition-all"
-            >
-              <span className="material-symbols-outlined text-lg">add</span>
-              <span>Publish New Assignment</span>
-            </button>
-            <Link
-              href="/schedule"
-              className="w-full py-3 border border-outline-variant/60 text-primary rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-surface-container-low transition-all"
-            >
-              <span className="material-symbols-outlined text-lg">event_available</span>
-              <span>Manage Class Timetable</span>
+
+            <Link href="/teacher/classes" className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">class</span> Manage Classes
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+            </Link>
+
+            <Link href="/teacher/students" className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-indigo-400">group</span> View Students
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+            </Link>
+
+            <Link href="/teacher/attendance" className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-400">how_to_reg</span> Take Attendance
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+            </Link>
+
+            <Link href="/teacher/announcements" className="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-200 border border-slate-800">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-amber-400">campaign</span> Send Announcement
+              </div>
+              <span className="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
             </Link>
           </section>
         </div>
+
       </div>
 
-      {/* Modal */}
+      {/* Create Assignment Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="bg-surface-container-lowest w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative p-6 space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/40 pb-3">
-              <h3 className="font-bold text-primary text-lg">Create New Assignment</h3>
-              <button onClick={() => setModalOpen(false)} className="material-symbols-outlined text-on-surface-variant hover:text-primary">close</button>
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl relative p-6 space-y-4 text-white">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-amber-400 text-base">Create New Assignment</h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
+                <span className="material-symbols-outlined">close</span>
+              </button>
             </div>
-            <form onSubmit={handleCreateAssignment} className="space-y-3">
+            <form onSubmit={handleCreateAssignment} className="space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Subject</label>
+                <label className="block text-slate-300 font-bold mb-1">Subject</label>
                 <select
-                  className="w-full p-2.5 border border-outline-variant/60 rounded-xl text-sm focus:outline-none focus:border-primary"
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={newSubject}
                   onChange={(e) => setNewSubject(e.target.value)}
                 >
@@ -696,53 +699,44 @@ function TeacherDashboard({ user }) {
                   <option>Physics</option>
                   <option>Chemistry</option>
                   <option>History</option>
-                  <option>English</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Title</label>
+                <label className="block text-slate-300 font-bold mb-1">Title</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Calculus Practice Set"
-                  className="w-full p-2.5 border border-outline-variant/60 rounded-xl text-sm focus:outline-none focus:border-primary"
+                  placeholder="e.g. Calculus Definite Integrals"
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Description</label>
+                <label className="block text-slate-300 font-bold mb-1">Description</label>
                 <textarea
                   required
                   rows="3"
-                  placeholder="Assignment instructions..."
-                  className="w-full p-2.5 border border-outline-variant/60 rounded-xl text-sm focus:outline-none focus:border-primary"
+                  placeholder="Instructions for students..."
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Due Date</label>
+                <label className="block text-slate-300 font-bold mb-1">Due Date</label>
                 <input
                   type="datetime-local"
                   required
-                  className="w-full p-2.5 border border-outline-variant/60 rounded-xl text-sm focus:outline-none focus:border-primary"
+                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={newDueDate}
                   onChange={(e) => setNewDueDate(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-on-surface-variant mb-1">Attachment (Optional)</label>
-                <input
-                  type="file"
-                  className="w-full text-xs text-on-surface-variant"
-                  onChange={(e) => setNewFile(e.target.files[0] || null)}
                 />
               </div>
               <button
                 type="submit"
                 disabled={creating}
-                className="w-full py-3 bg-primary text-on-primary font-bold text-sm rounded-xl hover:bg-primary-container disabled:opacity-50 transition-all mt-2"
+                className="w-full py-3 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400 disabled:opacity-50 transition-all mt-2"
               >
                 {creating ? 'Publishing...' : 'Publish Assignment'}
               </button>

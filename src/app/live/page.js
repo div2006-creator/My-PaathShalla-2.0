@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/ClientLayout';
 import { LiveKitRoom, RoomAudioRenderer, useTracks, useLocalParticipant } from '@livekit/components-react';
@@ -15,6 +15,7 @@ import FloatingToolbar from '@/components/live/FloatingToolbar';
 import WhiteboardModal from '@/components/live/WhiteboardModal';
 import AIAssistantModal from '@/components/live/AIAssistantModal';
 import DeviceSettingsModal from '@/components/live/DeviceSettingsModal';
+import LiveQuizModal from '@/components/live/LiveQuizModal';
 
 // Main Page Component
 export default function LiveClassPage() {
@@ -76,8 +77,8 @@ export default function LiveClassPage() {
   if (connecting) {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-[#121212] text-white">
-        <div className="w-12 h-12 border-4 border-[#8ab4f8] border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 font-bold text-sm sm:text-base text-[#8ab4f8]">Connecting to Premium Live Classroom...</p>
+        <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 font-bold text-sm text-indigo-400">Connecting to PaathShalla Live Classroom...</p>
       </div>
     );
   }
@@ -90,7 +91,7 @@ export default function LiveClassPage() {
         <p className="text-gray-400 text-xs mt-2 max-w-md">{error}</p>
         <button 
           onClick={() => router.push('/dashboard')}
-          className="mt-6 px-6 py-2.5 bg-[#8ab4f8] text-black rounded-xl font-bold active:scale-95 transition-transform"
+          className="mt-6 px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold active:scale-95 transition-transform"
         >
           Return to Dashboard
         </button>
@@ -115,7 +116,7 @@ export default function LiveClassPage() {
   );
 }
 
-// Custom Conference UI Component
+// Custom Classroom UI Component
 function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTopic = "Integral Calculus & Limits" }) {
   const router = useRouter();
 
@@ -129,6 +130,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
   const [reactionsList, setReactionsList] = useState([]);
   const [whiteboardOpen, setWhiteboardOpen] = useState(false);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [layoutMode, setLayoutMode] = useState('grid');
@@ -275,13 +277,15 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
   };
 
   const handleLeaveClass = () => {
-    router.push('/dashboard');
+    if (confirm('Are you sure you want to leave the live classroom?')) {
+      router.push('/dashboard');
+    }
   };
 
   return (
-    <div className="bg-[#121212] text-white overflow-hidden h-screen flex flex-col relative z-10 animate-fade-in-up">
+    <div className="bg-[#121212] text-white overflow-hidden h-screen flex flex-col relative z-10">
       
-      {/* Floating Animated Reactions Particles */}
+      {/* Floating Animated Reactions */}
       <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
         {reactionsList.map((r) => (
           <div
@@ -294,7 +298,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
         ))}
       </div>
 
-      {/* 1. GLASS STICKY HEADER */}
+      {/* 1. CLASSROOM HEADER */}
       <ClassroomHeader 
         courseTitle={classSubject}
         topicName={classTopic}
@@ -312,18 +316,18 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
         userRole={user.role}
       />
 
-      {/* 2. MAIN CLASSROOM AREA */}
+      {/* 2. MAIN CLASSROOM STAGE */}
       <main className="flex-1 flex flex-col lg:flex-row relative overflow-hidden p-3 sm:p-4 gap-4 min-h-0">
         
         {/* Stage Container */}
         <div className="flex-grow flex flex-col gap-3 relative min-w-0 h-full">
           
-          {/* Live Captions Banner */}
+          {/* Subtitles Banner */}
           {captionsEnabled && (
             <div className="absolute top-4 inset-x-8 z-30 pointer-events-none flex justify-center">
-              <div className="bg-black/85 backdrop-blur-md border border-white/10 px-5 py-2 rounded-xl text-center text-xs sm:text-sm text-yellow-300 font-medium shadow-2xl max-w-xl animate-fade-in-up">
-                <span className="text-gray-400 font-bold mr-2">[Live AI Subtitles]:</span>
-                "Welcome to today's Calculus lecture. Please turn to chapter 4 on derivatives and limits."
+              <div className="bg-black/85 backdrop-blur-md border border-white/10 px-5 py-2 rounded-xl text-center text-xs sm:text-sm text-amber-400 font-medium shadow-2xl max-w-xl">
+                <span className="text-gray-400 font-bold mr-2">[Live Captions]:</span>
+                "Welcome to today's Calculus lecture. Please open your books to page 142."
               </div>
             </div>
           )}
@@ -338,9 +342,9 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
             layoutMode={layoutMode}
           />
 
-          {/* More Options Menu (⋮) Popup */}
+          {/* More Options Menu (⋮) */}
           {moreMenuOpen && (
-            <div className="absolute bottom-20 right-6 sm:right-24 z-40 bg-[#28292c] border border-white/10 py-2 w-56 rounded-2xl shadow-2xl text-xs flex flex-col text-white animate-fade-in-up">
+            <div className="absolute bottom-20 right-6 sm:right-24 z-40 bg-[#28292c] border border-white/10 py-2 w-56 rounded-2xl shadow-2xl text-xs flex flex-col text-white">
               <button 
                 onClick={handleToggleFullscreen}
                 className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left"
@@ -350,11 +354,11 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
               </button>
               
               <button 
-                onClick={() => { setLayoutMode(layoutMode === 'grid' ? 'spotlight' : 'grid'); setMoreMenuOpen(false); }}
+                onClick={() => { setQuizOpen(true); setMoreMenuOpen(false); }}
                 className="px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 text-left"
               >
-                <span className="material-symbols-outlined text-base">grid_view</span>
-                <span>Layout: {layoutMode === 'grid' ? 'Spotlight' : 'Grid View'}</span>
+                <span className="material-symbols-outlined text-base">quiz</span>
+                <span>Launch MCQ Quiz</span>
               </button>
               
               <button 
@@ -402,7 +406,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
 
         </div>
 
-        {/* 4. TABBED RIGHT SIDEBAR PANEL */}
+        {/* 4. TABBED SIDEBAR PANEL */}
         {sidebarOpen && (
           <SidebarPanel 
             user={user}
@@ -418,11 +422,18 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
 
       </main>
 
-      {/* 5. MODALS & DRAWERS */}
+      {/* MODALS */}
       {whiteboardOpen && (
         <WhiteboardModal 
           onClose={() => setWhiteboardOpen(false)} 
           isTeacher={user.role === 'TEACHER'}
+        />
+      )}
+
+      {quizOpen && (
+        <LiveQuizModal
+          onClose={() => setQuizOpen(false)}
+          userRole={user.role}
         />
       )}
 
@@ -461,7 +472,6 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
                   <option>Physics</option>
                   <option>Chemistry</option>
                   <option>History</option>
-                  <option>English</option>
                 </select>
               </div>
               <div>
@@ -476,12 +486,12 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics 101", classTop
               </div>
               <div className="bg-white/5 p-3 rounded-xl flex items-center justify-between text-gray-400">
                 <span>Recorded Duration:</span>
-                <span className="font-bold text-[#8ab4f8]">{formatTime(recordingSeconds)}</span>
+                <span className="font-bold text-amber-400">{formatTime(recordingSeconds)}</span>
               </div>
               <button 
                 type="submit"
                 disabled={savingRecording}
-                className="w-full py-3 bg-[#8ab4f8] text-black font-bold rounded-xl active:scale-95 transition-transform disabled:opacity-50"
+                className="w-full py-3 bg-amber-500 text-black font-extrabold rounded-xl active:scale-95 transition-transform disabled:opacity-50"
               >
                 {savingRecording ? 'Publishing...' : 'Save & Publish Recording'}
               </button>
