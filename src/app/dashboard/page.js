@@ -78,117 +78,175 @@ function StudentDashboard({ user }) {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 md:space-y-8 animate-fade-in-up">
       
-      {/* Welcome Header */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/60 pb-6">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold font-display text-primary tracking-tight">Welcome back, {user.name}</h2>
-          <p className="text-on-surface-variant font-body-md text-base mt-1">
-            You have completed <strong className="text-primary">{completionRate}%</strong> of your course assignments.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link 
-            href="/live" 
-            className="bg-primary text-on-primary px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95 shadow-sm"
-          >
-            <span className="material-symbols-outlined text-[20px]">sensors</span>
-            <span>Join Live Classroom</span>
-          </Link>
-        </div>
-      </section>
-
-      {/* Stitch Web Design Stats Grid */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Card 1 */}
-        <div className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-xl shadow-sm hover:border-outline transition-all">
-          <p className="text-xs font-bold font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Scheduled Classes</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">{schedule.length}</span>
-            <span className="text-xs text-on-surface-variant">sessions</span>
-          </div>
-          <div className="mt-4 h-1.5 bg-surface-container rounded-full overflow-hidden">
-            <div className="bg-secondary h-full" style={{ width: `${Math.min(schedule.length * 20, 100)}%` }}></div>
-          </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-xl shadow-sm hover:border-outline transition-all">
-          <p className="text-xs font-bold font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Total Assignments</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">{totalAssignments}</span>
-            <span className="text-xs text-on-surface-variant">assigned</span>
-          </div>
-          <div className="mt-4 flex items-center gap-1.5 text-on-secondary-container">
-            <span className="material-symbols-outlined text-sm">assignment_turned_in</span>
-            <span className="text-xs font-bold">{completedAssignments.length} Submitted</span>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-xl shadow-sm hover:border-outline transition-all">
-          <p className="text-xs font-bold font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Completion Rate</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">{completionRate}%</span>
-          </div>
-          <div className="mt-4 h-1.5 bg-surface-container rounded-full overflow-hidden">
-            <div className="bg-primary h-full" style={{ width: `${completionRate}%` }}></div>
-          </div>
-        </div>
-
-        {/* Card 4 */}
-        <div className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-xl shadow-sm hover:border-outline transition-all">
-          <p className="text-xs font-bold font-label-md text-on-surface-variant uppercase tracking-wider mb-2">Video Library</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">{recordings.length}</span>
-            <span className="text-xs text-on-surface-variant">recordings</span>
-          </div>
-          <div className="mt-4 flex items-center gap-1.5 text-secondary">
-            <span className="material-symbols-outlined text-sm">ondemand_video</span>
-            <span className="text-xs font-bold">24/7 Access</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Web Layout Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: Live Banner & Schedule */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Active Live Class Card */}
-          {liveClass && (
-            <div className="bg-primary-container text-white p-6 rounded-2xl shadow-md relative overflow-hidden">
-              <div className="absolute -right-10 -top-10 w-48 h-48 bg-secondary/20 rounded-full blur-3xl pointer-events-none"></div>
-              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 bg-red-500 text-white rounded-md text-[11px] font-bold uppercase tracking-wider animate-pulse">
-                      ● Active Live Session
-                    </span>
-                    <span className="text-xs text-primary-fixed-dim uppercase tracking-wider font-bold">{liveClass.subject}</span>
-                  </div>
-                  <h3 className="text-2xl font-bold font-display leading-tight">{liveClass.topic}</h3>
-                  <p className="text-sm opacity-90 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">person</span>
-                    <span>Instructor: {liveClass.teacherName}</span>
-                  </p>
-                </div>
-                <Link
-                  href="/live"
-                  className="bg-secondary-container text-on-secondary-container px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg hover:scale-[0.99] active:scale-95 transition-all shrink-0"
-                >
-                  <span className="material-symbols-outlined text-xl">play_circle</span>
-                  <span>Join Classroom</span>
-                </Link>
+      {/* Hero: Continue Learning (Prompt Spec #4) */}
+      <section className="bg-gradient-to-r from-primary to-primary-container text-white p-6 sm:p-8 rounded-2xl shadow-lg relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-80 h-80 bg-secondary/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-secondary">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-ping"></span>
+              <span>Continue Learning</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold font-display leading-tight">Data Structures & Algorithms</h2>
+            <p className="text-sm opacity-90">Current Lesson: <strong className="text-white underline">Binary Search Trees (BST - Insertion & Deletion)</strong></p>
+            
+            {/* Clean Progress Bar */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between text-xs font-bold">
+                <span>Course Completion Progress</span>
+                <span className="text-secondary font-extrabold">68%</span>
+              </div>
+              <div className="h-2.5 w-full bg-black/20 rounded-full overflow-hidden p-0.5 border border-white/10">
+                <div className="bg-gradient-to-r from-secondary to-amber-300 h-full rounded-full transition-all duration-500" style={{ width: '68%' }}></div>
               </div>
             </div>
-          )}
+          </div>
 
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+            <Link
+              href="/courses"
+              className="bg-secondary text-black px-6 py-3.5 rounded-xl font-extrabold text-sm flex items-center justify-center gap-2 shadow-md hover:bg-amber-400 active:scale-95 transition-all"
+            >
+              <span className="material-symbols-outlined text-xl">play_circle</span>
+              <span>Continue Learning</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Student Stats Rail */}
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-on-surface-variant uppercase">Study Streak</span>
+            <span className="material-symbols-outlined text-amber-500">local_fire_department</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">14 Days</p>
+          <p className="text-[11px] text-emerald-600 font-bold mt-1">⚡ Active Daily Learner</p>
+        </div>
+
+        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-on-surface-variant uppercase">Assignments</span>
+            <span className="material-symbols-outlined text-primary">assignment_turned_in</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">{completedAssignments.length} / {totalAssignments}</p>
+          <p className="text-[11px] text-on-surface-variant font-bold mt-1">{completionRate}% Completed</p>
+        </div>
+
+        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-on-surface-variant uppercase">Test Accuracy</span>
+            <span className="material-symbols-outlined text-emerald-500">analytics</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">92%</p>
+          <p className="text-[11px] text-emerald-600 font-bold mt-1">Top 5% Student Rank</p>
+        </div>
+
+        <div className="bg-surface border border-outline-variant p-4 sm:p-5 rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-on-surface-variant uppercase">Live Lectures</span>
+            <span className="material-symbols-outlined text-red-500">videocam</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-primary mt-1">{schedule.length}</p>
+          <p className="text-[11px] text-on-surface-variant font-bold mt-1">Available 24/7</p>
+        </div>
+      </section>
+
+      {/* Dedicated Live Classes Section (Prompt Spec #5) */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-xl font-extrabold text-primary font-display flex items-center gap-2">
+              <span className="material-symbols-outlined text-red-500 animate-pulse">sensors</span>
+              <span>Live Classroom Sessions</span>
+            </h3>
+            <p className="text-xs text-on-surface-variant font-bold">Join ongoing interactive lectures with real-time doubt solving</p>
+          </div>
+          <Link href="/live" className="text-xs font-extrabold text-primary hover:underline flex items-center gap-1">
+            <span>Go to Classroom Stage</span>
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Live Now Card */}
+          <div className="bg-surface border-2 border-red-500/30 p-6 rounded-2xl shadow-sm relative overflow-hidden group hover:border-red-500 transition-all">
+            <div className="flex justify-between items-start mb-3">
+              <span className="px-3 py-1 bg-red-600 text-white rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 animate-pulse shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-white"></span>
+                LIVE NOW 🔴
+              </span>
+              <span className="text-xs font-bold text-on-surface-variant bg-surface-container-high px-2.5 py-1 rounded-lg flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">visibility</span>
+                <span>42 Watching</span>
+              </span>
+            </div>
+
+            <span className="text-xs font-extrabold text-primary uppercase tracking-wider">Mathematics 101</span>
+            <h4 className="text-lg sm:text-xl font-extrabold text-on-surface font-display mt-1">Integral Calculus & Limits Deep Dive</h4>
+            
+            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-outline-variant/60">
+              <div className="w-9 h-9 rounded-full bg-primary-fixed flex items-center justify-center text-primary font-bold text-xs shrink-0">
+                PV
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-extrabold text-on-surface truncate">Prof. Rajesh Varma</p>
+                <p className="text-[11px] text-on-surface-variant font-bold">Senior IIT-JEE Faculty</p>
+              </div>
+              <Link
+                href="/live?subject=Mathematics&topic=Integral+Calculus+%26+Limits"
+                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl font-extrabold text-xs shadow-md active:scale-95 transition-all shrink-0"
+              >
+                JOIN CLASS
+              </Link>
+            </div>
+          </div>
+
+          {/* Upcoming Class Card */}
+          <div className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm hover:border-primary transition-all">
+            <div className="flex justify-between items-start mb-3">
+              <span className="px-3 py-1 bg-amber-500/10 text-amber-700 border border-amber-500/30 rounded-full text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-xs">schedule</span>
+                Tomorrow at 10:00 AM
+              </span>
+              <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">Physics</span>
+            </div>
+
+            <span className="text-xs font-extrabold text-on-surface-variant uppercase tracking-wider">Physics - Unit 4</span>
+            <h4 className="text-lg sm:text-xl font-extrabold text-on-surface font-display mt-1">Electromagnetic Induction & Faraday Laws</h4>
+            
+            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-outline-variant/60">
+              <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center text-amber-800 font-bold text-xs shrink-0">
+                AS
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-extrabold text-on-surface truncate">Dr. Ananya Sharma</p>
+                <p className="text-[11px] text-on-surface-variant font-bold">Head of Physics</p>
+              </div>
+              <button
+                onClick={() => alert("Reminder set! You will receive a notification 15 minutes before class starts.")}
+                className="bg-surface-container-high hover:bg-surface-container-highest text-primary border border-outline-variant px-4 py-2.5 rounded-xl font-extrabold text-xs active:scale-95 transition-all shrink-0 flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">notifications_active</span>
+                <span>SET REMINDER</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Grid Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Schedule & Recordings */}
+        <div className="lg:col-span-2 space-y-8">
+          
           {/* Upcoming Schedule */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/40 pb-3">
+          <section className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-outline-variant/60 pb-3">
               <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
-                <span className="material-symbols-outlined text-secondary">calendar_month</span>
+                <span className="material-symbols-outlined text-amber-500">calendar_month</span>
                 <span>Upcoming Class Schedule</span>
               </h3>
               <Link href="/schedule" className="text-xs font-bold text-primary hover:underline">View Full Calendar &gt;</Link>
@@ -197,16 +255,16 @@ function StudentDashboard({ user }) {
             {upcomingClasses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {upcomingClasses.map((item) => (
-                  <div key={item.id} className="p-4 border border-outline-variant/60 rounded-xl bg-surface-container-low/40 hover:bg-surface-container-low transition-colors space-y-2">
+                  <div key={item.id} className="p-4 border border-outline-variant/60 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors space-y-2">
                     <div className="flex justify-between items-start">
-                      <span className="text-xs font-bold text-secondary font-label-md bg-secondary-container/20 px-2 py-0.5 rounded">
+                      <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
                         {item.startTime} - {item.endTime}
                       </span>
                       <span className="text-[11px] font-bold text-on-surface-variant">{item.dayOfWeek}</span>
                     </div>
-                    <h4 className="font-bold text-primary text-base truncate">{item.subject}</h4>
+                    <h4 className="font-bold text-on-surface text-base truncate">{item.subject}</h4>
                     <p className="text-xs text-on-surface-variant truncate">{item.topic}</p>
-                    <div className="pt-2 border-t border-outline-variant/40 text-[11px] text-on-surface-variant flex justify-between">
+                    <div className="pt-2 border-t border-outline-variant/40 text-[11px] text-on-surface-variant flex justify-between font-bold">
                       <span>{item.teacherName}</span>
                       <span>{item.room}</span>
                     </div>
@@ -214,13 +272,13 @@ function StudentDashboard({ user }) {
                 ))}
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm py-4">No additional classes scheduled for today.</p>
+              <p className="text-on-surface-variant text-sm py-4 font-bold">No additional classes scheduled for today.</p>
             )}
           </section>
 
           {/* Recordings Quick View */}
-          <section className="bg-surface-container-lowest border border-outline-variant/60 p-6 rounded-2xl shadow-sm space-y-4">
-            <div className="flex justify-between items-center border-b border-outline-variant/40 pb-3">
+          <section className="bg-surface border border-outline-variant p-6 rounded-2xl shadow-sm space-y-4">
+            <div className="flex justify-between items-center border-b border-outline-variant/60 pb-3">
               <h3 className="text-lg font-bold text-primary font-display flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">video_library</span>
                 <span>Recent Recorded Lectures</span>
@@ -234,7 +292,7 @@ function StudentDashboard({ user }) {
                   <div
                     key={video.id}
                     onClick={() => setSelectedVideo(video)}
-                    className="group border border-outline-variant/60 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all bg-surface-container-lowest"
+                    className="group border border-outline-variant rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all bg-surface"
                   >
                     <div className="relative aspect-video bg-black overflow-hidden">
                       <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={video.title} src={video.thumbnailUrl} />
@@ -248,15 +306,15 @@ function StudentDashboard({ user }) {
                       </span>
                     </div>
                     <div className="p-3">
-                      <span className="text-[10px] font-bold uppercase text-secondary tracking-wider">{video.subject}</span>
-                      <h5 className="font-bold text-primary text-sm truncate">{video.title}</h5>
-                      <p className="text-xs text-on-surface-variant truncate mt-0.5">{video.instructorName}</p>
+                      <span className="text-[10px] font-bold uppercase text-primary tracking-wider">{video.subject}</span>
+                      <h5 className="font-bold text-on-surface text-sm truncate">{video.title}</h5>
+                      <p className="text-xs text-on-surface-variant truncate mt-0.5 font-bold">{video.instructorName}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-on-surface-variant text-sm py-4">No recorded lectures available yet.</p>
+              <p className="text-on-surface-variant text-sm py-4 font-bold">No recorded lectures available yet.</p>
             )}
           </section>
 

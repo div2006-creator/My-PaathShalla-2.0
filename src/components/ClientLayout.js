@@ -128,10 +128,16 @@ export default function ClientLayout({ children }) {
 
   const navItems = [
     { href: '/dashboard', label: 'Overview', icon: 'dashboard' },
+    { href: '/courses', label: 'My Courses', icon: 'school' },
+    { href: '/live', label: 'Live Classes', icon: 'sensors' },
     { href: '/schedule', label: 'Schedule', icon: 'calendar_today' },
     { href: '/assignments', label: 'Assignments', icon: 'assignment' },
+    { href: '/tests', label: 'Test Series', icon: 'quiz' },
+    { href: '/dpp', label: 'DPP Practice', icon: 'fitness_center' },
+    { href: '/doubts', label: 'Ask Doubts', icon: 'help_outline' },
+    { href: '/materials', label: 'Study Library', icon: 'menu_book' },
     { href: '/recordings', label: 'Recordings', icon: 'videocam' },
-    { href: '/live', label: 'Live Gurukul', icon: 'sensors' },
+    { href: '/profile', label: 'My Profile', icon: 'person' },
   ];
 
   return (
@@ -303,14 +309,14 @@ export default function ClientLayout({ children }) {
         </div>
       </main>
 
-      {/* Mobile Bottom Nav Bar */}
+      {/* Mobile Bottom Nav Bar (Student-First 5 Tabs) */}
       {!isLivePage && user && (
-        <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-lg border-t border-outline-variant flex justify-around items-center px-1 pt-2 pb-4">
+        <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-2xl bg-surface shadow-2xl border-t border-outline-variant/80 flex justify-around items-center px-1 pt-2 pb-4">
           <Link 
             href="/dashboard"
             className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
               pathname === '/dashboard' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
+                ? 'bg-primary text-on-primary rounded-xl font-bold shadow-sm' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
@@ -319,51 +325,51 @@ export default function ClientLayout({ children }) {
           </Link>
 
           <Link 
-            href="/schedule"
+            href="/courses"
             className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
-              pathname === '/schedule' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
+              pathname === '/courses' 
+                ? 'bg-primary text-on-primary rounded-xl font-bold shadow-sm' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/schedule' ? "'FILL' 1" : "'FILL' 0" }}>calendar_today</span>
-            <span className="font-label-md text-[10px] mt-0.5">Schedule</span>
-          </Link>
-
-          <Link 
-            href="/assignments"
-            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
-              pathname === '/assignments' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/assignments' ? "'FILL' 1" : "'FILL' 0" }}>assignment</span>
-            <span className="font-label-md text-[10px] mt-0.5">Tasks</span>
-          </Link>
-
-          <Link 
-            href="/recordings"
-            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
-              pathname === '/recordings' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
-                : 'text-on-surface-variant hover:text-primary'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/recordings' ? "'FILL' 1" : "'FILL' 0" }}>videocam</span>
-            <span className="font-label-md text-[10px] mt-0.5">Recordings</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/courses' ? "'FILL' 1" : "'FILL' 0" }}>school</span>
+            <span className="font-label-md text-[10px] mt-0.5">Courses</span>
           </Link>
 
           <Link 
             href="/live"
-            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
+            className={`flex flex-col items-center justify-center px-2.5 py-1.5 transition-all duration-200 active:scale-95 ${
               pathname === '/live' 
-                ? 'bg-primary text-on-primary rounded-2xl font-bold' 
-                : 'text-primary font-bold'
+                ? 'bg-red-600 text-white rounded-xl font-extrabold shadow-md animate-pulse' 
+                : 'bg-red-500/10 text-red-600 rounded-xl font-bold'
             }`}
           >
-            <span className="material-symbols-outlined text-[20px] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
-            <span className="font-label-md text-[10px] mt-0.5">Live Class</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
+            <span className="font-label-md text-[10px] mt-0.5 font-extrabold">LIVE</span>
+          </Link>
+
+          <Link 
+            href="/tests"
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
+              pathname === '/tests' 
+                ? 'bg-primary text-on-primary rounded-xl font-bold shadow-sm' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/tests' ? "'FILL' 1" : "'FILL' 0" }}>quiz</span>
+            <span className="font-label-md text-[10px] mt-0.5">Tests</span>
+          </Link>
+
+          <Link 
+            href="/profile"
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
+              pathname === '/profile' 
+                ? 'bg-primary text-on-primary rounded-xl font-bold shadow-sm' 
+                : 'text-on-surface-variant hover:text-primary'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/profile' ? "'FILL' 1" : "'FILL' 0" }}>person</span>
+            <span className="font-label-md text-[10px] mt-0.5">Profile</span>
           </Link>
         </nav>
       )}
