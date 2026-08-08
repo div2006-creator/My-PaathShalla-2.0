@@ -254,53 +254,65 @@ export default function ClientLayout({ children }) {
 
       {/* Mobile Bottom Nav Bar */}
       {!isLivePage && user && (
-        <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-lg border-t border-outline-variant flex justify-around items-center px-2 pt-2 pb-6">
+        <nav className="md:hidden fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container-lowest shadow-lg border-t border-outline-variant flex justify-around items-center px-1 pt-2 pb-4">
           <Link 
             href="/dashboard"
-            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
               pathname === '/dashboard' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-full' 
+                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/dashboard' ? "'FILL' 1" : "'FILL' 0" }}>dashboard</span>
-            <span className="font-label-md text-[11px]">Home</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/dashboard' ? "'FILL' 1" : "'FILL' 0" }}>dashboard</span>
+            <span className="font-label-md text-[10px] mt-0.5">Home</span>
           </Link>
 
           <Link 
             href="/schedule"
-            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
               pathname === '/schedule' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-full' 
+                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/schedule' ? "'FILL' 1" : "'FILL' 0" }}>calendar_today</span>
-            <span className="font-label-md text-[11px]">Schedule</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/schedule' ? "'FILL' 1" : "'FILL' 0" }}>calendar_today</span>
+            <span className="font-label-md text-[10px] mt-0.5">Schedule</span>
           </Link>
 
           <Link 
             href="/assignments"
-            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
               pathname === '/assignments' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-full' 
+                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/assignments' ? "'FILL' 1" : "'FILL' 0" }}>assignment</span>
-            <span className="font-label-md text-[11px]">Assignments</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/assignments' ? "'FILL' 1" : "'FILL' 0" }}>assignment</span>
+            <span className="font-label-md text-[10px] mt-0.5">Tasks</span>
           </Link>
 
           <Link 
             href="/recordings"
-            className={`flex flex-col items-center justify-center px-3 py-1 transition-all duration-200 active:scale-98 ${
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
               pathname === '/recordings' 
-                ? 'bg-secondary-container text-on-secondary-container rounded-full' 
+                ? 'bg-secondary-container text-on-secondary-container rounded-2xl font-bold' 
                 : 'text-on-surface-variant hover:text-primary'
             }`}
           >
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: pathname === '/recordings' ? "'FILL' 1" : "'FILL' 0" }}>videocam</span>
-            <span className="font-label-md text-[11px]">Recordings</span>
+            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: pathname === '/recordings' ? "'FILL' 1" : "'FILL' 0" }}>videocam</span>
+            <span className="font-label-md text-[10px] mt-0.5">Recordings</span>
+          </Link>
+
+          <Link 
+            href="/live"
+            className={`flex flex-col items-center justify-center px-2 py-1 transition-all duration-200 active:scale-95 ${
+              pathname === '/live' 
+                ? 'bg-primary text-on-primary rounded-2xl font-bold' 
+                : 'text-primary font-bold'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px] animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>sensors</span>
+            <span className="font-label-md text-[10px] mt-0.5">Live Class</span>
           </Link>
         </nav>
       )}
