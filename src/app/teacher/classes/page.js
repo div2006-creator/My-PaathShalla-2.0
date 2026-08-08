@@ -4,53 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 
 export default function TeacherClassesPage() {
-  const [classes, setClasses] = useState([
-    {
-      id: 'class-1',
-      name: 'Class 12 — Target JEE 2026',
-      section: 'Section A',
-      subject: 'Mathematics',
-      teacher: 'Prof. Rajesh Varma',
-      studentsCount: 42,
-      activeLive: true,
-      schedule: 'Mon, Wed, Fri (10:00 AM - 11:30 AM)',
-      students: [
-        { id: 's1', name: 'Aarav Mehta', email: 'aarav@paathshalla.com', attendance: '96%', score: '92%' },
-        { id: 's2', name: 'Priya Sharma', email: 'priya@paathshalla.com', attendance: '92%', score: '88%' },
-        { id: 's3', name: 'Rohan Gupta', email: 'rohan@paathshalla.com', attendance: '88%', score: '85%' },
-        { id: 's4', name: 'Ananya Roy', email: 'ananya@paathshalla.com', attendance: '94%', score: '90%' },
-      ]
-    },
-    {
-      id: 'class-2',
-      name: 'Class 11 — Physics Core',
-      section: 'Section B',
-      subject: 'Physics',
-      teacher: 'Dr. Ananya Sharma',
-      studentsCount: 38,
-      activeLive: false,
-      schedule: 'Tue, Thu, Sat (02:00 PM - 03:30 PM)',
-      students: [
-        { id: 's5', name: 'Siddharth Nair', email: 'sid@paathshalla.com', attendance: '90%', score: '84%' },
-        { id: 's6', name: 'Neha Patel', email: 'neha@paathshalla.com', attendance: '95%', score: '91%' },
-      ]
-    },
-    {
-      id: 'class-3',
-      name: 'Class 12 — Organic Chemistry',
-      section: 'Section C',
-      subject: 'Chemistry',
-      teacher: 'Dr. Vikramaditya',
-      studentsCount: 45,
-      activeLive: false,
-      schedule: 'Mon, Tue, Thu (11:30 AM - 01:00 PM)',
-      students: [
-        { id: 's7', name: 'Kabir Verma', email: 'kabir@paathshalla.com', attendance: '91%', score: '87%' },
-      ]
-    }
-  ]);
-
-  const [selectedClass, setSelectedClass] = useState(classes[0]);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'live' | 'recordings' | 'assignments' | 'attendance'
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [addStudentModalOpen, setAddStudentModalOpen] = useState(false);
@@ -70,13 +25,14 @@ export default function TeacherClassesPage() {
       name: classNameInput,
       section: sectionInput,
       subject: subjectInput,
-      teacher: 'Prof. Rajesh Varma',
+      teacher: 'Faculty Instructor',
       studentsCount: 0,
       activeLive: false,
-      schedule: 'Mon, Wed (10:00 AM)',
+      schedule: 'Scheduled Session',
       students: []
     };
-    setClasses([newCls, ...classes]);
+    const updated = [newCls, ...classes];
+    setClasses(updated);
     setSelectedClass(newCls);
     setClassNameInput('');
     setCreateModalOpen(false);
@@ -84,7 +40,7 @@ export default function TeacherClassesPage() {
 
   const handleAddStudent = (e) => {
     e.preventDefault();
-    if (!studentNameInput || !studentEmailInput) return;
+    if (!studentNameInput || !studentEmailInput || !selectedClass) return;
     const newStudent = {
       id: 'stu-' + Date.now(),
       name: studentNameInput,
@@ -95,8 +51,8 @@ export default function TeacherClassesPage() {
 
     const updatedCls = {
       ...selectedClass,
-      studentsCount: selectedClass.studentsCount + 1,
-      students: [newStudent, ...selectedClass.students]
+      studentsCount: (selectedClass.studentsCount || 0) + 1,
+      students: [newStudent, ...(selectedClass.students || [])]
     };
 
     setSelectedClass(updatedCls);
@@ -110,11 +66,12 @@ export default function TeacherClassesPage() {
     if (confirm('Are you sure you want to delete this class?')) {
       const remaining = classes.filter(c => c.id !== id);
       setClasses(remaining);
-      if (remaining.length > 0) setSelectedClass(remaining[0]);
+      setSelectedClass(remaining.length > 0 ? remaining[0] : null);
     }
   };
 
   const handleRemoveStudent = (stuId) => {
+    if (!selectedClass) return;
     const updatedStudents = selectedClass.students.filter(s => s.id !== stuId);
     const updatedCls = {
       ...selectedClass,
@@ -132,10 +89,10 @@ export default function TeacherClassesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-400 px-2.5 py-1 rounded border border-amber-500/30">
-            Class Management
+            Classroom Operations
           </span>
-          <h1 className="text-2xl font-extrabold text-white font-display mt-1">Classroom Management Hub</h1>
-          <p className="text-xs text-slate-400">Manage live classes, recordings, assignments, and attendance for enrolled students</p>
+          <h1 className="text-2xl font-extrabold text-white font-display mt-1">Class Management Hub</h1>
+          <p className="text-xs text-slate-400">Manage sections, enrolled students, live sessions, and class materials</p>
         </div>
 
         <button
@@ -153,33 +110,39 @@ export default function TeacherClassesPage() {
         {/* Class Selector Sidebar */}
         <div className="space-y-3">
           <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Active Classes</h3>
-          <div className="space-y-2">
-            {classes.map((cls) => (
-              <button
-                key={cls.id}
-                onClick={() => setSelectedClass(cls)}
-                className={`w-full p-4 rounded-xl text-left border transition-all space-y-1.5 ${
-                  selectedClass?.id === cls.id
-                    ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md'
-                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-bold uppercase text-amber-400">{cls.subject}</span>
-                  {cls.activeLive && (
-                    <span className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[9px] font-extrabold animate-pulse">
-                      LIVE
-                    </span>
-                  )}
-                </div>
-                <h4 className="font-bold text-sm text-white truncate">{cls.name}</h4>
-                <div className="flex justify-between items-center text-[11px] text-slate-400">
-                  <span>{cls.section}</span>
-                  <span>{cls.studentsCount} Students</span>
-                </div>
-              </button>
-            ))}
-          </div>
+          {classes.length > 0 ? (
+            <div className="space-y-2">
+              {classes.map((cls) => (
+                <button
+                  key={cls.id}
+                  onClick={() => setSelectedClass(cls)}
+                  className={`w-full p-4 rounded-xl text-left border transition-all space-y-1.5 ${
+                    selectedClass?.id === cls.id
+                      ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md'
+                      : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-bold uppercase text-amber-400">{cls.subject}</span>
+                    {cls.activeLive && (
+                      <span className="px-1.5 py-0.5 bg-red-600 text-white rounded text-[9px] font-extrabold animate-pulse">
+                        LIVE
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-bold text-sm text-white truncate">{cls.name}</h4>
+                  <div className="flex justify-between items-center text-[11px] text-slate-400">
+                    <span>{cls.section}</span>
+                    <span>{cls.studentsCount} Students</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-center text-slate-400 text-xs">
+              No classes created yet.
+            </div>
+          )}
         </div>
 
         {/* Selected Class Detail Stage */}
@@ -201,7 +164,7 @@ export default function TeacherClassesPage() {
 
               <div className="flex items-center gap-2">
                 <Link
-                  href="/live"
+                  href={`/live?room=${selectedClass.id}&subject=${encodeURIComponent(selectedClass.subject)}`}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-md"
                 >
                   <span className="material-symbols-outlined text-sm">sensors</span> Start Live Class
@@ -216,7 +179,7 @@ export default function TeacherClassesPage() {
               </div>
             </div>
 
-            {/* 5 Core Tabs Navigation Bar (Prompt Spec #7) */}
+            {/* 5 Core Tabs Navigation Bar */}
             <div className="grid grid-cols-5 border-b border-slate-800 bg-slate-900 rounded-xl p-1 text-xs font-bold gap-1 text-center">
               {[
                 { id: 'overview', label: 'Overview', icon: 'dashboard' },
@@ -248,54 +211,66 @@ export default function TeacherClassesPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
                     <span className="text-[10px] text-slate-400 font-bold uppercase">Enrolled Students</span>
-                    <p className="text-2xl font-black text-white">{selectedClass.studentsCount}</p>
+                    <p className="text-2xl font-black text-white">{selectedClass.studentsCount || 0}</p>
                   </div>
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Class Attendance %</span>
-                    <p className="text-2xl font-black text-emerald-400">94% Average</p>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Class Section</span>
+                    <p className="text-2xl font-black text-indigo-400">{selectedClass.section}</p>
                   </div>
                   <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-1">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase">Assignments Due</span>
-                    <p className="text-2xl font-black text-amber-400">2 Pending</p>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Subject</span>
+                    <p className="text-2xl font-black text-amber-400">{selectedClass.subject}</p>
                   </div>
                 </div>
 
                 {/* Enrolled Students Directory */}
                 <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                    <h3 className="font-bold text-white text-sm">Enrolled Students ({selectedClass.students.length})</h3>
+                    <h3 className="font-bold text-white text-sm">Enrolled Students ({selectedClass.students ? selectedClass.students.length : 0})</h3>
                     <button
                       onClick={() => setAddStudentModalOpen(true)}
                       className="px-3 py-1.5 bg-amber-500 text-black font-extrabold text-xs rounded-xl hover:bg-amber-400"
                     >
-                      + Add Student
+                      + Enroll Student
                     </button>
                   </div>
 
-                  <div className="space-y-2">
-                    {selectedClass.students.map((stu) => (
-                      <div key={stu.id} className="p-3 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold text-xs">
-                            {stu.name.split(' ').map(n => n[0]).join('')}
+                  {selectedClass.students && selectedClass.students.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedClass.students.map((stu) => (
+                        <div key={stu.id} className="p-3 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-indigo-600/30 text-indigo-400 flex items-center justify-center font-bold text-xs">
+                              {stu.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                              <p className="font-bold text-white text-xs">{stu.name}</p>
+                              <span className="text-[10px] text-slate-400">{stu.email}</span>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-white text-xs">{stu.name}</p>
-                            <span className="text-[10px] text-slate-400">{stu.email}</span>
+                          <div className="flex items-center gap-4 text-xs font-bold">
+                            <span className="text-emerald-400">Att: {stu.attendance}</span>
+                            <button
+                              onClick={() => handleRemoveStudent(stu.id)}
+                              className="text-slate-400 hover:text-red-400 text-xs"
+                            >
+                              Remove
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4 text-xs font-bold">
-                          <span className="text-emerald-400">Att: {stu.attendance}</span>
-                          <button
-                            onClick={() => handleRemoveStudent(stu.id)}
-                            className="text-slate-400 hover:text-red-400 text-xs"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-slate-400 text-xs space-y-2">
+                      <p>No students enrolled in this class yet.</p>
+                      <button
+                        onClick={() => setAddStudentModalOpen(true)}
+                        className="px-3.5 py-1.5 bg-amber-500 text-black font-extrabold rounded-xl"
+                      >
+                        Enroll First Student
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -370,8 +345,16 @@ export default function TeacherClassesPage() {
 
           </div>
         ) : (
-          <div className="lg:col-span-3 bg-slate-900 border border-slate-800 p-12 rounded-2xl text-center text-slate-400">
-            Select a class from the left sidebar to view details.
+          <div className="lg:col-span-3 bg-slate-900 border border-slate-800 p-12 rounded-2xl text-center space-y-3">
+            <span className="material-symbols-outlined text-slate-600 text-5xl">class</span>
+            <h3 className="text-lg font-bold text-white">No classes created yet</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">Create your first digital classroom section to begin teaching, scheduling live sessions, and assigning coursework.</p>
+            <button
+              onClick={() => setCreateModalOpen(true)}
+              className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md"
+            >
+              Create Class Now
+            </button>
           </div>
         )}
 
@@ -393,7 +376,7 @@ export default function TeacherClassesPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Class 12 — Advanced Physics"
+                  placeholder="e.g. Class 12 — Mathematics"
                   className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
                   value={classNameInput}
                   onChange={(e) => setClassNameInput(e.target.value)}

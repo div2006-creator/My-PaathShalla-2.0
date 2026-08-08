@@ -2,26 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { cookies } from 'next/headers';
 
-let inMemoryChats = [
-  {
-    id: 'seed-chat-1',
-    classId: 'default-class',
-    senderId: 'teacher-1',
-    senderName: 'Prof. Rajesh Varma',
-    senderRole: 'TEACHER',
-    message: 'Welcome everyone to today’s Live Gurukul session!',
-    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString()
-  },
-  {
-    id: 'seed-chat-2',
-    classId: 'default-class',
-    senderId: 'student-1',
-    senderName: 'Aarav Mehta',
-    senderRole: 'STUDENT',
-    message: 'Good morning Professor! Ready for calculus.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-  }
-];
+let inMemoryChats = [];
 
 export async function GET() {
   try {
@@ -44,7 +25,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     let senderId = 'guest-student-id';
-    let senderName = 'Aarav Mehta';
+    let senderName = 'Student Learner';
     let senderRole = 'STUDENT';
 
     try {
@@ -54,7 +35,7 @@ export async function POST(request) {
         const user = await prisma.user.findUnique({ where: { id: userId } }).catch(() => null);
         if (user) {
           senderId = user.id;
-          senderName = user.name === 'Aarav Mehta' ? 'You' : user.name;
+          senderName = user.name;
           senderRole = user.role;
         }
       }

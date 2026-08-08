@@ -4,38 +4,7 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-let inMemoryRecordings = [
-  {
-    id: 'rec-1',
-    title: 'Integral Calculus & Limits Deep Dive',
-    subject: 'Mathematics',
-    instructorName: 'Prof. Rajesh Varma',
-    duration: '45:20',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-  },
-  {
-    id: 'rec-2',
-    title: 'Electromagnetic Induction & Faraday Experiments',
-    subject: 'Physics',
-    instructorName: 'Prof. Rajesh Varma',
-    duration: '38:15',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=80',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString()
-  },
-  {
-    id: 'rec-3',
-    title: 'Organic Chemistry Reactions & Mechanisms',
-    subject: 'Chemistry',
-    instructorName: 'Prof. Rajesh Varma',
-    duration: '52:10',
-    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=600&auto=format&fit=crop&q=80',
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString()
-  }
-];
+let inMemoryRecordings = [];
 
 export async function GET(request) {
   try {

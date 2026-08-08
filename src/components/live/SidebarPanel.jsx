@@ -43,10 +43,14 @@ export default function SidebarPanel({
         isHandRaised: p.isSpeaking
       }))
     : [
-        { id: 'p1', name: 'Prof. Rajesh Varma (You)', role: user?.role || 'TEACHER', isMuted: false, isHandRaised: false },
-        { id: 'p2', name: 'Aarav Mehta', role: 'STUDENT', isMuted: true, isHandRaised: true },
-        { id: 'p3', name: 'Rohan Gupta', role: 'STUDENT', isMuted: false, isHandRaised: false },
-        { id: 'p4', name: 'Priya Sharma', role: 'STUDENT', isMuted: fontIsMuted(true), isHandRaised: false }
+        {
+          id: user?.id || 'local-user',
+          name: user ? `${user.name} (You)` : 'You',
+          role: user?.role || 'STUDENT',
+          isLocal: true,
+          isMuted: false,
+          isHandRaised: false
+        }
       ];
 
   function fontIsMuted(val) { return val; }
@@ -119,32 +123,40 @@ export default function SidebarPanel({
       {activeTab === 'chat' && (
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
           <div className="flex-1 p-4 overflow-y-auto space-y-3">
-            {chats.map((msg, idx) => {
-              const isMe = msg.sender === user?.name || msg.sender === 'You';
-              const isTeacher = msg.role === 'TEACHER' || msg.isTeacher;
-              return (
-                <div key={idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}>
-                  <div className="flex items-center gap-1.5 text-[10px]">
-                    <span className="font-bold text-slate-300">{msg.sender}</span>
-                    {isTeacher && (
-                      <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 font-extrabold rounded text-[9px] border border-amber-500/30">
-                        Teacher
-                      </span>
-                    )}
-                    <span className="text-slate-500">{msg.time || 'Now'}</span>
+            {chats.length > 0 ? (
+              chats.map((msg, idx) => {
+                const isMe = msg.sender === user?.name || msg.sender === 'You';
+                const isTeacher = msg.role === 'TEACHER' || msg.isTeacher;
+                return (
+                  <div key={idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1`}>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <span className="font-bold text-slate-300">{msg.sender}</span>
+                      {isTeacher && (
+                        <span className="px-1.5 py-0.5 bg-amber-500/20 text-amber-400 font-extrabold rounded text-[9px] border border-amber-500/30">
+                          Teacher
+                        </span>
+                      )}
+                      <span className="text-slate-500">{msg.time || 'Now'}</span>
+                    </div>
+                    <div className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
+                      isMe
+                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                        : isTeacher
+                        ? 'bg-slate-800 text-amber-300 border border-amber-500/30 rounded-tl-none font-medium'
+                        : 'bg-slate-800 text-slate-200 rounded-tl-none'
+                    }`}>
+                      {msg.text}
+                    </div>
                   </div>
-                  <div className={`p-3 rounded-2xl text-xs max-w-[85%] leading-relaxed ${
-                    isMe
-                      ? 'bg-indigo-600 text-white rounded-tr-none'
-                      : isTeacher
-                      ? 'bg-slate-800 text-amber-300 border border-amber-500/30 rounded-tl-none font-medium'
-                      : 'bg-slate-800 text-slate-200 rounded-tl-none'
-                  }`}>
-                    {msg.text}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 space-y-1">
+                <span className="material-symbols-outlined text-4xl text-slate-600">chat</span>
+                <p className="font-bold text-xs text-white">Start the conversation.</p>
+                <p className="text-[10px]">Type a message below to chat with your classroom.</p>
+              </div>
+            )}
             <div ref={chatEndRef} />
           </div>
 

@@ -37,8 +37,8 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     let studentId = 'guest-student-id';
-    let studentName = 'Aarav Mehta';
-    let studentEmail = 'aarav@paathshalla.com';
+    let studentName = 'Student Learner';
+    let studentEmail = 'student@paathshalla.com';
 
     try {
       const cookieStore = cookies();

@@ -7,13 +7,7 @@ export default function TeacherAttendancePage() {
   const { user } = useAuth();
   const isTeacher = user?.role === 'TEACHER';
 
-  const [records, setRecords] = useState([
-    { id: 'att-1', studentName: 'Aarav Mehta', studentEmail: 'aarav@paathshalla.com', className: 'Data Structures', subject: 'Computer Science', date: '8 Aug 2026', joinTime: '10:00 AM', leaveTime: '11:18 AM', status: 'PRESENT', durationMinutes: 78, attendancePercent: 92 },
-    { id: 'att-2', studentName: 'Priya Sharma', studentEmail: 'priya@paathshalla.com', className: 'Integral Calculus', subject: 'Mathematics', date: '7 Aug 2026', joinTime: '09:02 AM', leaveTime: '10:00 AM', status: 'PRESENT', durationMinutes: 58, attendancePercent: 96 },
-    { id: 'att-3', studentName: 'Rohan Gupta', studentEmail: 'rohan@paathshalla.com', className: 'Electromagnetism', subject: 'Physics', date: '6 Aug 2026', joinTime: '10:20 AM', leaveTime: '11:00 AM', status: 'LATE', durationMinutes: 40, attendancePercent: 66 },
-    { id: 'att-4', studentName: 'Kabir Verma', studentEmail: 'kabir@paathshalla.com', className: 'Organic Reaction', subject: 'Chemistry', date: '5 Aug 2026', joinTime: '-', leaveTime: '-', status: 'ABSENT', durationMinutes: 0, attendancePercent: 0 }
-  ]);
-
+  const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedClass, setSelectedClass] = useState('All');
   const [search, setSearch] = useState('');
@@ -23,11 +17,10 @@ export default function TeacherAttendancePage() {
     try {
       const res = await fetch(`/api/attendance?className=${selectedClass}&search=${search}`);
       const data = await res.json();
-      if (data.attendanceRecords && data.attendanceRecords.length > 0) {
-        setRecords(data.attendanceRecords);
-      }
+      setRecords(data.attendanceRecords || []);
     } catch (e) {
       console.error(e);
+      setRecords([]);
     } finally {
       setLoading(false);
     }
@@ -51,8 +44,8 @@ export default function TeacherAttendancePage() {
   };
 
   const filteredRecords = records.filter(r =>
-    r.studentName.toLowerCase().includes(search.toLowerCase()) ||
-    r.className.toLowerCase().includes(search.toLowerCase())
+    (r.studentName && r.studentName.toLowerCase().includes(search.toLowerCase())) ||
+    (r.className && r.className.toLowerCase().includes(search.toLowerCase()))
   );
 
   const presentCount = records.filter(r => r.status === 'PRESENT').length;
@@ -112,9 +105,6 @@ export default function TeacherAttendancePage() {
             onChange={(e) => setSelectedClass(e.target.value)}
           >
             <option value="All">All Classes</option>
-            <option value="Data Structures">Data Structures</option>
-            <option value="Integral Calculus">Integral Calculus</option>
-            <option value="Electromagnetism">Electromagnetism</option>
           </select>
         </div>
 
@@ -129,64 +119,72 @@ export default function TeacherAttendancePage() {
 
       {/* Attendance Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-md">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-800/80 text-slate-400 font-bold uppercase text-[10px] border-b border-slate-800">
-            <tr>
-              <th className="p-4">Subject & Class</th>
-              {isTeacher && <th className="p-4">Student</th>}
-              <th className="p-4">Session Date</th>
-              <th className="p-4">Join Time</th>
-              <th className="p-4">Leave Time</th>
-              <th className="p-4">Duration</th>
-              <th className="p-4 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800 font-medium">
-            {filteredRecords.map((r) => (
-              <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
-                <td className="p-4">
-                  <p className="font-bold text-white">{r.className}</p>
-                  <span className="text-[10px] text-indigo-400">{r.subject}</span>
-                </td>
-                {isTeacher && (
+        {filteredRecords.length > 0 ? (
+          <table className="w-full text-left text-xs text-slate-300">
+            <thead className="bg-slate-800/80 text-slate-400 font-bold uppercase text-[10px] border-b border-slate-800">
+              <tr>
+                <th className="p-4">Subject & Class</th>
+                {isTeacher && <th className="p-4">Student</th>}
+                <th className="p-4">Session Date</th>
+                <th className="p-4">Join Time</th>
+                <th className="p-4">Leave Time</th>
+                <th className="p-4">Duration</th>
+                <th className="p-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800 font-medium">
+              {filteredRecords.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
                   <td className="p-4">
-                    <p className="font-bold text-white">{r.studentName}</p>
-                    <span className="text-[10px] text-slate-500">{r.studentEmail}</span>
+                    <p className="font-bold text-white">{r.className}</p>
+                    <span className="text-[10px] text-indigo-400">{r.subject}</span>
                   </td>
-                )}
-                <td className="p-4">{r.date}</td>
-                <td className="p-4">{r.joinTime}</td>
-                <td className="p-4">{r.leaveTime}</td>
-                <td className="p-4 font-bold text-white">{r.durationMinutes} mins</td>
-                <td className="p-4 text-center">
-                  {isTeacher ? (
-                    <select
-                      value={r.status}
-                      onChange={(e) => handleStatusChange(r.id, e.target.value)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-black border focus:outline-none cursor-pointer ${
+                  {isTeacher && (
+                    <td className="p-4">
+                      <p className="font-bold text-white">{r.studentName}</p>
+                      <span className="text-[10px] text-slate-500">{r.studentEmail}</span>
+                    </td>
+                  )}
+                  <td className="p-4">{r.date}</td>
+                  <td className="p-4">{r.joinTime}</td>
+                  <td className="p-4">{r.leaveTime}</td>
+                  <td className="p-4 font-bold text-white">{r.durationMinutes} mins</td>
+                  <td className="p-4 text-center">
+                    {isTeacher ? (
+                      <select
+                        value={r.status}
+                        onChange={(e) => handleStatusChange(r.id, e.target.value)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-black border focus:outline-none cursor-pointer ${
+                          r.status === 'PRESENT' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                          r.status === 'LATE' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                          'bg-red-500/20 text-red-400 border-red-500/30'
+                        }`}
+                      >
+                        <option value="PRESENT" className="bg-slate-900 text-emerald-400">PRESENT</option>
+                        <option value="LATE" className="bg-slate-900 text-amber-400">LATE</option>
+                        <option value="ABSENT" className="bg-slate-900 text-red-400">ABSENT</option>
+                      </select>
+                    ) : (
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-black border ${
                         r.status === 'PRESENT' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
                         r.status === 'LATE' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
                         'bg-red-500/20 text-red-400 border-red-500/30'
-                      }`}
-                    >
-                      <option value="PRESENT" className="bg-slate-900 text-emerald-400">PRESENT</option>
-                      <option value="LATE" className="bg-slate-900 text-amber-400">LATE</option>
-                      <option value="ABSENT" className="bg-slate-900 text-red-400">ABSENT</option>
-                    </select>
-                  ) : (
-                    <span className={`px-2.5 py-1 rounded-lg text-xs font-black border ${
-                      r.status === 'PRESENT' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                      r.status === 'LATE' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
-                      'bg-red-500/20 text-red-400 border-red-500/30'
-                    }`}>
-                      {r.status} ({r.attendancePercent}%)
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      }`}>
+                        {r.status}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div className="p-12 text-center text-slate-400 space-y-2">
+            <span className="material-symbols-outlined text-slate-600 text-5xl">fact_check</span>
+            <h3 className="text-base font-bold text-white">No attendance records available yet.</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">Attendance records will be calculated automatically as students join live classroom sessions.</p>
+          </div>
+        )}
       </div>
 
     </div>

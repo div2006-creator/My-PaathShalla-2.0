@@ -24,9 +24,9 @@ export default function RecordingsPage() {
   }, []);
 
   const filteredRecordings = recordings.filter(r =>
-    r.title.toLowerCase().includes(search.toLowerCase()) ||
-    r.subject.toLowerCase().includes(search.toLowerCase()) ||
-    r.instructorName.toLowerCase().includes(search.toLowerCase())
+    (r.title && r.title.toLowerCase().includes(search.toLowerCase())) ||
+    (r.subject && r.subject.toLowerCase().includes(search.toLowerCase())) ||
+    (r.instructorName && r.instructorName.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (
@@ -53,55 +53,63 @@ export default function RecordingsPage() {
 
       {/* Recordings Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredRecordings.map((rec) => (
-          <div
-            key={rec.id}
-            className="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:border-indigo-500 transition-all flex flex-col justify-between"
-          >
-            <div>
-              {/* Thumbnail Stage */}
-              <div 
-                onClick={() => setSelectedVideo(rec)}
-                className="relative aspect-video bg-slate-950 overflow-hidden cursor-pointer"
-              >
-                <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={rec.title} src={rec.thumbnailUrl} />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-indigo-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-3xl">play_arrow</span>
+        {filteredRecordings.length > 0 ? (
+          filteredRecordings.map((rec) => (
+            <div
+              key={rec.id}
+              className="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:border-indigo-500 transition-all flex flex-col justify-between"
+            >
+              <div>
+                {/* Thumbnail Stage */}
+                <div 
+                  onClick={() => setSelectedVideo(rec)}
+                  className="relative aspect-video bg-slate-950 overflow-hidden cursor-pointer"
+                >
+                  <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={rec.title} src={rec.thumbnailUrl} />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full bg-indigo-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <span className="material-symbols-outlined text-3xl">play_arrow</span>
+                    </div>
                   </div>
+                  <span className="absolute bottom-2 right-2 bg-slate-950/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/10">
+                    {rec.duration}
+                  </span>
                 </div>
-                <span className="absolute bottom-2 right-2 bg-slate-950/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/10">
-                  {rec.duration}
-                </span>
+
+                {/* Info */}
+                <div className="p-4 space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
+                    {rec.subject}
+                  </span>
+                  <h3 className="font-bold text-white text-sm leading-snug line-clamp-2">{rec.title}</h3>
+                  <p className="text-xs text-slate-400">Instructor: {rec.instructorName}</p>
+                </div>
               </div>
 
-              {/* Info */}
-              <div className="p-4 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">
-                  {rec.subject}
-                </span>
-                <h3 className="font-bold text-white text-sm leading-snug line-clamp-2">{rec.title}</h3>
-                <p className="text-xs text-slate-400">Instructor: {rec.instructorName}</p>
+              {/* Actions */}
+              <div className="p-4 pt-0 border-t border-slate-800/60 mt-3 flex justify-between items-center text-xs">
+                <button
+                  onClick={() => alert(`Downloading lecture notes for "${rec.title}"...`)}
+                  className="text-indigo-400 font-bold hover:underline flex items-center gap-1 text-[11px]"
+                >
+                  <span className="material-symbols-outlined text-xs">description</span> Download Notes
+                </button>
+                <button
+                  onClick={() => setSelectedVideo(rec)}
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all"
+                >
+                  ▶ Watch Recording
+                </button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="p-4 pt-0 border-t border-slate-800/60 mt-3 flex justify-between items-center text-xs">
-              <button
-                onClick={() => alert(`Downloading lecture notes for "${rec.title}"...`)}
-                className="text-indigo-400 font-bold hover:underline flex items-center gap-1 text-[11px]"
-              >
-                <span className="material-symbols-outlined text-xs">description</span> Download Notes
-              </button>
-              <button
-                onClick={() => setSelectedVideo(rec)}
-                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all"
-              >
-                Watch Replay
-              </button>
-            </div>
+          ))
+        ) : (
+          <div className="bg-slate-900 border border-slate-800 p-12 rounded-2xl text-center space-y-2 col-span-full">
+            <span className="material-symbols-outlined text-slate-600 text-5xl">videocam_off</span>
+            <h3 className="text-base font-bold text-white">No class recordings available yet.</h3>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">Recordings will appear here after your live classes.</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Video Modal */}

@@ -33,7 +33,7 @@ export default function ProfilePage() {
             </div>
 
             <p className="text-xs text-slate-400 font-bold">{user.email}</p>
-            <p className="text-xs text-emerald-400 font-bold">PaathShalla Digital ID: #PS-84920</p>
+            <p className="text-xs text-emerald-400 font-bold">Authenticated User ID: {user.id}</p>
           </div>
 
           <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
@@ -53,32 +53,15 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-slate-800 text-center">
-          <div className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl space-y-1">
-            <span className="material-symbols-outlined text-amber-400 text-2xl">local_fire_department</span>
-            <p className="text-xl font-black text-white">14 Days</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Study Streak</p>
-          </div>
-
-          <div className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl space-y-1">
-            <span className="material-symbols-outlined text-indigo-400 text-2xl">schedule</span>
-            <p className="text-xl font-black text-indigo-400">48 Hours</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Hours Studied</p>
-          </div>
-
-          <div className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl space-y-1">
-            <span className="material-symbols-outlined text-emerald-400 text-2xl">analytics</span>
-            <p className="text-xl font-black text-emerald-400">92%</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Accuracy Rate</p>
-          </div>
-
-          <div className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl space-y-1">
-            <span className="material-symbols-outlined text-purple-400 text-2xl">emoji_events</span>
-            <p className="text-xl font-black text-purple-400">3 Badges</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Achievements</p>
-          </div>
+        {/* Account System Status */}
+        <div className="p-4 bg-slate-800/40 border border-slate-800 rounded-xl flex items-center justify-between text-xs font-bold">
+          <span className="text-slate-300">Account System Status</span>
+          <span className="text-emerald-400 flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            Authenticated & Ready
+          </span>
         </div>
+
       </div>
 
     </div>

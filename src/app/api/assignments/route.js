@@ -4,54 +4,7 @@ import { cookies } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
-let inMemoryAssignments = [
-  {
-    id: 'assign-1',
-    title: 'Integral Calculus & Area Under Curves',
-    description: 'Solve problems 1 to 10 on page 142. Show all substitution steps and evaluate definite integral limits.',
-    subject: 'Mathematics',
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
-    fileUrl: null,
-    fileName: null,
-    teacherId: 'default-teacher-id',
-    createdAt: new Date().toISOString(),
-    submissions: [
-      {
-        id: 'sub-1',
-        assignmentId: 'assign-1',
-        studentId: 'default-student-id',
-        content: 'Calculus substitution solution: Let u = x^2 + 1, then du = 2x dx. The definite integral evaluates to 42.5.',
-        submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-        grade: 'A+',
-        feedback: 'Excellent step-by-step substitution work!'
-      }
-    ]
-  },
-  {
-    id: 'assign-2',
-    title: 'Electromagnetic Induction & Faraday Laws',
-    description: 'Calculate magnetic flux changes and induced electromotive force (EMF) in a 50-turn copper coil.',
-    subject: 'Physics',
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 96).toISOString(),
-    fileUrl: null,
-    fileName: null,
-    teacherId: 'default-teacher-id',
-    createdAt: new Date().toISOString(),
-    submissions: []
-  },
-  {
-    id: 'assign-3',
-    title: 'Organic Reaction Mechanisms & Esterification',
-    description: 'Draw the nucleophilic acyl substitution mechanism for acetic acid and ethanol esterification.',
-    subject: 'Chemistry',
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 120).toISOString(),
-    fileUrl: null,
-    fileName: null,
-    teacherId: 'default-teacher-id',
-    createdAt: new Date().toISOString(),
-    submissions: []
-  }
-];
+let inMemoryAssignments = [];
 
 export async function GET(request) {
   try {

@@ -311,10 +311,10 @@ export default function AssignmentsPage() {
             );
           })
         ) : (
-          <div className="flex flex-col items-center justify-center py-12 opacity-50">
-            <span className="material-symbols-outlined text-6xl mb-2">workspace_premium</span>
-            <p className="font-body-md font-bold text-on-surface">No assignments here</p>
-            <p className="text-label-md">Keep up the good work!</p>
+          <div className="flex flex-col items-center justify-center py-12 text-slate-400 space-y-2">
+            <span className="material-symbols-outlined text-5xl text-slate-600">assignment</span>
+            <p className="font-bold text-sm text-white">No assignments available.</p>
+            <p className="text-xs text-slate-400">{user.role === 'TEACHER' ? 'Create an assignment to assign coursework to your class.' : 'Check back later for new coursework.'}</p>
           </div>
         )}
       </div>
