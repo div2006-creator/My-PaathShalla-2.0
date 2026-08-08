@@ -272,6 +272,14 @@ export default function ClientLayout({ children }) {
             </button>
 
             <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition-all flex items-center justify-center"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <span className="material-symbols-outlined text-lg">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
+            </button>
+
+            <button
               onClick={toggleRole}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/30 hover:bg-amber-500/20 transition-all active:scale-95 shadow-sm"
             >
@@ -327,6 +335,14 @@ export default function ClientLayout({ children }) {
                   {unreadCount}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 bg-slate-800 text-slate-300 rounded-lg border border-slate-700 flex items-center justify-center"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              <span className="material-symbols-outlined text-sm">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
             </button>
 
             <button 

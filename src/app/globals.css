@@ -30,12 +30,6 @@
   background-repeat: repeat-x;
 }
 
-.chalkboard-texture {
-  background-image: url("https://www.transparenttextures.com/patterns/dark-matter.png");
-  background-color: #1a237e;
-  /* Using primary container as base */
-}
-
 .card-shadow {
   box-shadow: 0 4px 20px -2px rgba(0, 6, 102, 0.08);
 }
@@ -49,15 +43,8 @@
 }
 
 @keyframes subtle-float {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .float-anim {
@@ -122,31 +109,22 @@ video {
   border-radius: inherit !important;
 }
 
-/* Local participant camera mirror effect for natural angle */
+/* Local participant camera mirror effect */
 .lk-participant-tile[data-lk-local-participant="true"] video,
 [data-lk-local-participant="true"] video {
   transform: scaleX(-1) !important;
 }
 
-/* Participant tile overlay & audio indicator positioning */
 .lk-participant-metadata,
 .lk-participant-placeholder {
   z-index: 10 !important;
 }
 
-/* Floating Emoji Reactions Animation (Google Meet feature) */
+/* Floating Emoji Reactions Animation */
 @keyframes reactionFloat {
-  0% {
-    transform: translateY(0) scale(0.6);
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateY(-280px) scale(1.5);
-    opacity: 0;
-  }
+  0% { transform: translateY(0) scale(0.6); opacity: 1; }
+  50% { opacity: 0.9; }
+  100% { transform: translateY(-280px) scale(1.5); opacity: 0; }
 }
 
 .reaction-particle {
@@ -161,63 +139,143 @@ video {
   }
 }
 
-/* ================= DARK MODE OVERRIDES ================= */
+/* ================= PAATHSHALLA COMPLETE DUAL THEME SYSTEM ================= */
+
+/* DARK MODE (WHEN html HAS .dark CLASS) */
 html.dark {
-  background-color: #121212 !important;
-  color: #e4e2e1 !important;
   color-scheme: dark;
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
 }
 
 html.dark body {
-  background-color: #121212 !important;
-  color: #e4e2e1 !important;
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .bg-surface-container-lowest {
-  background-color: #1e1e1e !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+/* LIGHT MODE (WHEN html DOES NOT HAVE .dark CLASS) */
+html:not(.dark) {
+  color-scheme: light;
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
 }
 
-html.dark .bg-surface-container-low {
-  background-color: #282828 !important;
-  color: #ffffff !important;
+html:not(.dark) body {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
 }
 
-html.dark .bg-surface-container-high {
-  background-color: #2d2d2d !important;
-  color: #ffffff !important;
+/* Light Mode Component Overrides */
+html:not(.dark) aside {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
-html.dark .bg-surface {
-  background-color: #121212 !important;
+html:not(.dark) header {
+  background-color: rgba(255, 255, 255, 0.92) !important;
+  border-color: #E2E8F0 !important;
 }
 
-html.dark .text-on-surface,
-html.dark .text-[#1b1c1c] {
-  color: #f2f0f0 !important;
+html:not(.dark) .bg-slate-950 {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
 }
 
-html.dark .text-on-surface-variant {
-  color: #a6a5b5 !important;
+html:not(.dark) .bg-slate-900 {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.03) !important;
 }
 
-html.dark .border-outline-variant {
-  border-color: rgba(255, 255, 255, 0.15) !important;
+html:not(.dark) .bg-slate-800 {
+  background-color: #F8FAFC !important;
+  color: #1E293B !important;
+  border-color: #E2E8F0 !important;
 }
 
-html.dark .paper-shadow {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5) !important;
+html:not(.dark) .bg-slate-800\/50,
+html:not(.dark) .bg-slate-800\/40 {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: #E2E8F0 !important;
 }
 
-html.dark input,
-html.dark select,
-html.dark textarea {
-  background-color: #282828 !important;
-  color: #ffffff !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-800\/80,
+html:not(.dark) .border-slate-800\/60,
+html:not(.dark) .border-slate-700 {
+  border-color: #E2E8F0 !important;
 }
 
-html.dark input::placeholder {
-  color: #888899 !important;
+html:not(.dark) .text-white {
+  color: #0F172A !important;
+}
+
+html:not(.dark) .text-slate-100,
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300 {
+  color: #1E293B !important;
+}
+
+html:not(.dark) .text-slate-400 {
+  color: #475569 !important;
+}
+
+html:not(.dark) .text-slate-500 {
+  color: #64748B !important;
+}
+
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+/* Light Mode Accent Adjustments */
+html:not(.dark) .text-amber-400 {
+  color: #D97706 !important;
+}
+
+html:not(.dark) .text-indigo-400 {
+  color: #4F46E5 !important;
+}
+
+html:not(.dark) .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html:not(.dark) .text-red-400 {
+  color: #DC2626 !important;
+}
+
+/* Keep primary buttons text white in Light Mode */
+html:not(.dark) .bg-indigo-600,
+html:not(.dark) .bg-red-600,
+html:not(.dark) .bg-emerald-600 {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .bg-indigo-600 *,
+html:not(.dark) .bg-red-600 *,
+html:not(.dark) .bg-emerald-600 * {
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .bg-amber-500 {
+  background-color: #F59E0B !important;
+  color: #0F172A !important;
+}
+
+/* Ensure Livekit room remains dark stage for video quality */
+.lk-room-container {
+  background-color: #0F172A !important;
 }
