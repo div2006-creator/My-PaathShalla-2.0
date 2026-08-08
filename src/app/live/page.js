@@ -18,7 +18,7 @@ import LiveQuizModal from '@/components/live/LiveQuizModal';
 
 // Main Page Component
 export default function LiveClassPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, requireAuth } = useAuth();
   const router = useRouter();
 
   const [activeRoom, setActiveRoom] = useState(null);
@@ -51,10 +51,12 @@ export default function LiveClassPage() {
       if (urlTopic) setClassTopic(urlTopic);
 
       if (urlRoom) {
-        setActiveRoom(urlRoom);
+        if (isAuthenticated) {
+          setActiveRoom(urlRoom);
+        }
       }
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Fetch schedule for the lobby
   const fetchSchedule = async () => {
@@ -107,15 +109,23 @@ export default function LiveClassPage() {
         setConnecting(false);
       }
     }
-    if (user && activeRoom) {
+    if (activeRoom) {
       getToken();
     }
   }, [user, activeRoom, classSubject, classTopic]);
 
   const handleStartClass = (item) => {
-    setClassSubject(item.subject);
-    setClassTopic(item.topic);
-    setActiveRoom(item.id || item.room || 'live-class-' + Date.now());
+    requireAuth(() => {
+      setClassSubject(item.subject);
+      setClassTopic(item.topic);
+      setActiveRoom(item.id || item.room || 'live-class-' + Date.now());
+    }, 'STUDENT');
+  };
+
+  const handleOpenScheduleModal = () => {
+    requireAuth(() => {
+      setCreateModalOpen(true);
+    }, 'TEACHER');
   };
 
   const handleCreateScheduleClass = async (e) => {
@@ -216,15 +226,13 @@ export default function LiveClassPage() {
           <p className="text-xs text-slate-400">Select a scheduled live session below to start or join the WebRTC classroom</p>
         </div>
 
-        {isTeacher && (
-          <button
-            onClick={() => setCreateModalOpen(true)}
-            className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 active:scale-95 transition-all self-start sm:self-auto"
-          >
-            <span className="material-symbols-outlined text-base">add_circle</span>
-            <span>Schedule Live Class</span>
-          </button>
-        )}
+        <button
+          onClick={handleOpenScheduleModal}
+          className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 active:scale-95 transition-all self-start sm:self-auto"
+        >
+          <span className="material-symbols-outlined text-base">add_circle</span>
+          <span>Schedule Live Class</span>
+        </button>
       </div>
 
       {/* Scheduled Classes Feed Grid */}
@@ -283,15 +291,13 @@ export default function LiveClassPage() {
                 ? 'Create your first scheduled live class to start teaching your students.'
                 : 'Check back soon! Your teachers will schedule live classes here.'}
             </p>
-            {isTeacher && (
-              <button
-                onClick={() => setCreateModalOpen(true)}
-                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-1.5"
-              >
-                <span className="material-symbols-outlined text-base">add_circle</span>
-                <span>Schedule Live Class Now</span>
-              </button>
-            )}
+            <button
+              onClick={handleOpenScheduleModal}
+              className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-base">add_circle</span>
+              <span>Schedule Live Class Now</span>
+            </button>
           </div>
         )}
       </div>

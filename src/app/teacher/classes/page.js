@@ -3,7 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 
+import { useAuth } from '@/components/ClientLayout';
+
 export default function TeacherClassesPage() {
+  const { requireAuth } = useAuth();
   const [classes, setClasses] = useState([]);
   const [selectedClass, setSelectedClass] = useState(null);
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'live' | 'recordings' | 'assignments' | 'attendance'
@@ -96,7 +99,7 @@ export default function TeacherClassesPage() {
         </div>
 
         <button
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => requireAuth(() => setCreateModalOpen(true), 'TEACHER')}
           className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl shadow-md flex items-center gap-1.5 active:scale-95 transition-all self-start sm:self-auto"
         >
           <span className="material-symbols-outlined text-base">add_circle</span>
