@@ -423,7 +423,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
   // Classroom Feature States
   const [chats, setChats] = useState([]);
   const [chatInput, setChatInput] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [handRaised, setHandRaised] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
