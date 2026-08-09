@@ -558,9 +558,11 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
             activeTab="chat"
             chats={chats}
             chatInput={chatInput}
-            onChangeChatInput={setChatInput}
+            setChatInput={setChatInput}
             onSendChat={handleSendChat}
             user={user}
+            isLocked={isLocked}
+            onToggleLock={() => setIsLocked(!isLocked)}
             onClose={() => setSidebarOpen(false)}
           />
         )}
@@ -568,11 +570,14 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
 
       {/* 3. FLOATING TOOLBAR CONTROLS */}
       <FloatingToolbar
+        userRole={user?.role || 'STUDENT'}
         isTeacher={user?.role === 'TEACHER'}
         handRaised={handRaised}
         onToggleHand={() => setHandRaised(!handRaised)}
         sidebarOpen={sidebarOpen}
+        chatOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        onToggleChat={() => setSidebarOpen(!sidebarOpen)}
         onOpenWhiteboard={() => setWhiteboardOpen(true)}
         isRecording={isRecording}
         onStartRecording={handleStartRecording}

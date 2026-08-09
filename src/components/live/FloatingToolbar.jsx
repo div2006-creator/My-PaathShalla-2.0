@@ -7,21 +7,27 @@ export default function FloatingToolbar({
   isCameraEnabled = true,
   isScreenSharing = false,
   handRaised = false,
-  chatOpen = true,
+  chatOpen = false,
+  sidebarOpen = false,
   captionsEnabled = false,
   isRecording = false,
   userRole = 'STUDENT',
+  isTeacher = false,
   onToggleMic,
   onToggleCamera,
   onToggleScreenShare,
   onOpenWhiteboard,
   onToggleHand,
   onToggleChat,
+  onToggleSidebar,
   onToggleCaptions,
   onLeaveClass,
   onStartRecording,
   onStopRecording
 }) {
+  const isTeacherUser = isTeacher || userRole === 'TEACHER';
+  const isChatOpen = chatOpen || sidebarOpen;
+  const toggleChatHandler = onToggleChat || onToggleSidebar;
   return (
     <div className="relative shrink-0 z-30">
       
@@ -106,7 +112,7 @@ export default function FloatingToolbar({
           </button>
 
           {/* Teacher Record Class */}
-          {userRole === 'TEACHER' && (
+          {isTeacherUser && (
             <button 
               onClick={isRecording ? onStopRecording : onStartRecording}
               className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all ${
@@ -124,9 +130,9 @@ export default function FloatingToolbar({
 
           {/* In-Call Sidebar Toggle */}
           <button 
-            onClick={onToggleChat}
+            onClick={toggleChatHandler}
             className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all ${
-              chatOpen 
+              isChatOpen 
                 ? 'bg-indigo-600 text-white font-bold shadow-lg' 
                 : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
             }`}
@@ -141,10 +147,10 @@ export default function FloatingToolbar({
           <button 
             onClick={onLeaveClass}
             className="px-4 sm:px-5 py-2 sm:py-2.5 bg-red-600 text-white rounded-full font-bold text-xs sm:text-sm hover:bg-red-700 active:scale-95 transition-all flex items-center gap-1.5 shadow-lg"
-            title={userRole === 'TEACHER' ? 'End Class for All' : 'Leave Class'}
+            title={isTeacherUser ? 'End Class for All' : 'Leave Class'}
           >
             <span className="material-symbols-outlined text-base sm:text-lg">call_end</span>
-            <span className="hidden sm:inline">{userRole === 'TEACHER' ? 'End Class' : 'Leave'}</span>
+            <span className="hidden sm:inline">{isTeacherUser ? 'End Class' : 'Leave'}</span>
           </button>
         </div>
 
