@@ -6,13 +6,14 @@ export async function GET(request) {
 
   const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
   
+  const host = request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
+  const dynamicBaseUrl = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || origin);
+  const baseUrl = dynamicBaseUrl.replace(/\/$/, '').trim();
+  const redirectUri = `${baseUrl}/api/auth/google/callback`;
+
   // If Google OAuth Client ID is missing, provide instant seamless sign-in
   if (!clientId || clientId.includes('YOUR_GOOGLE_CLIENT_ID')) {
-    const host = request.headers.get('host');
-    const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-    const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
-    const baseUrl = rawBaseUrl.replace(/\/$/, '').trim();
-
     const response = NextResponse.redirect(`${baseUrl}/dashboard`);
     const demoId = role === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
     response.cookies.set('userId', demoId, {
@@ -23,12 +24,6 @@ export async function GET(request) {
     });
     return response;
   }
-
-  const host = request.headers.get('host');
-  const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-  const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
-  const baseUrl = rawBaseUrl.replace(/\/$/, '').trim();
-  const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
   const state = JSON.stringify({ role });
 

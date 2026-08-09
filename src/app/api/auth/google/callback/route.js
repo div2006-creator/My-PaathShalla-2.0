@@ -8,8 +8,8 @@ export async function GET(request) {
 
   const host = request.headers.get('host');
   const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-  const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL || (host ? `${proto}://${host}` : origin);
-  const baseUrl = rawBaseUrl.replace(/\/$/, '').trim();
+  const dynamicBaseUrl = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || origin);
+  const baseUrl = dynamicBaseUrl.replace(/\/$/, '').trim();
 
   if (error || !code) {
     return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent(error || 'Google login was cancelled')}`);
