@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/ClientLayout';
-import { LiveKitRoom, RoomAudioRenderer, useTracks } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, useTracks, useLocalParticipant } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import '@livekit/components-styles';
 
@@ -15,7 +15,6 @@ import FloatingToolbar from '@/components/live/FloatingToolbar';
 import WhiteboardModal from '@/components/live/WhiteboardModal';
 import AIAssistantModal from '@/components/live/AIAssistantModal';
 import DeviceSettingsModal from '@/components/live/DeviceSettingsModal';
-import LiveQuizModal from '@/components/live/LiveQuizModal';
 
 // Main Page Component
 export default function LiveClassPage() {
@@ -218,6 +217,7 @@ export default function LiveClassPage() {
           user={user} 
           classSubject={classSubject} 
           classTopic={classTopic}
+          roomName={activeRoom}
           onLeaveRoom={() => setActiveRoom(null)} 
         />
         <RoomAudioRenderer />
@@ -408,8 +408,11 @@ export default function LiveClassPage() {
 }
 
 // Custom Classroom UI Component
-function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic = "Live Class Session", onLeaveRoom }) {
+function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic = "Live Class Session", roomName = "live-class", onLeaveRoom }) {
   const router = useRouter();
+
+  // Native LiveKit Local Participant Media Control (Mic, Camera, Screen Share)
+  const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } = useLocalParticipant();
 
   // Subscribe to live camera & screen share video tracks via LiveKit hook
   const tracks = useTracks(
@@ -448,14 +451,40 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
     return () => clearInterval(timer);
   }, [isRecording]);
 
+  // Handle native LiveKit Media Toggles
+  const handleToggleMic = async () => {
+    if (localParticipant) {
+      await localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled);
+    }
+  };
+
+  const handleToggleCamera = async () => {
+    if (localParticipant) {
+      await localParticipant.setCameraEnabled(!isCameraEnabled);
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    if (!localParticipant) return;
+    try {
+      const nextState = !(isScreenShareEnabled || isScreenSharing);
+      await localParticipant.setScreenShareEnabled(nextState);
+      setIsScreenSharing(nextState);
+    } catch (err) {
+      console.error('Screen share error:', err);
+      alert('Could not toggle screen share: ' + (err.message || 'Permission denied or browser not supported'));
+    }
+  };
+
   const handleStartRecording = async () => {
+    const currentRoom = roomName || 'live-class';
     setRecordingStatus('STARTING');
     try {
       const res = await fetch('/api/live/recording/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomName: activeRoom || 'live-class',
+          roomName: currentRoom,
           title: `${classSubject}: ${classTopic}`,
           subject: classSubject,
           instructorName: user?.name || 'Faculty Instructor',
@@ -471,20 +500,21 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         setRecordingStatus('IDLE');
       }
     } catch (err) {
-      console.error(err);
-      alert('Unable to start recording. Please try again.');
+      console.error('Start recording error:', err);
+      alert('Unable to start recording. Please check connection.');
       setRecordingStatus('IDLE');
     }
   };
 
   const handleStopRecording = async () => {
+    const currentRoom = roomName || 'live-class';
     setRecordingStatus('STOPPING');
     try {
       const res = await fetch('/api/live/recording/stop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomName: activeRoom || 'live-class',
+          roomName: currentRoom,
         }),
       });
       const data = await res.json();
@@ -526,6 +556,21 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
     handleLeave();
   };
 
+  const handleSendChat = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+    setChats([
+      ...chats,
+      {
+        sender: user?.name || 'Student',
+        role: user?.role || 'STUDENT',
+        text: chatInput,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      },
+    ]);
+    setChatInput('');
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#0F172A] overflow-hidden text-white font-sans">
       
@@ -557,7 +602,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         <VideoGrid
           tracks={tracks}
           layoutMode={layoutMode}
-          isScreenSharing={isScreenSharing}
+          isScreenSharing={isScreenShareEnabled || isScreenSharing}
           captionsEnabled={captionsEnabled}
           user={user}
         />
@@ -579,6 +624,12 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
 
       {/* 3. FLOATING TOOLBAR CONTROLS */}
       <FloatingToolbar
+        isMicrophoneEnabled={isMicrophoneEnabled}
+        isCameraEnabled={isCameraEnabled}
+        isScreenSharing={isScreenShareEnabled || isScreenSharing}
+        onToggleMic={handleToggleMic}
+        onToggleCamera={handleToggleCamera}
+        onToggleScreenShare={handleToggleScreenShare}
         userRole={user?.role || 'STUDENT'}
         isTeacher={user?.role === 'TEACHER'}
         handRaised={handRaised}
@@ -591,8 +642,6 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         isRecording={isRecording}
         onStartRecording={handleStartRecording}
         onStopRecording={handleStopRecording}
-        isScreenSharing={isScreenSharing}
-        onToggleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
         captionsEnabled={captionsEnabled}
         onToggleCaptions={() => setCaptionsEnabled(!captionsEnabled)}
         onLeaveClass={handleLeaveTrigger}

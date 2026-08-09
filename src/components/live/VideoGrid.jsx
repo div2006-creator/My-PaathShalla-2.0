@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Track } from 'livekit-client';
 import ParticipantCard from './ParticipantCard';
 
 export default function VideoGrid({
@@ -21,7 +22,11 @@ export default function VideoGrid({
 
   // Identify screen share track if active
   const screenShareTrack = tracks.find(
-    (t) => t.source === 'screen_share' || t.publication?.source === 'screen_share'
+    (t) =>
+      t.source === 'screen_share' ||
+      t.source === Track.Source.ScreenShare ||
+      t.publication?.source === 'screen_share' ||
+      t.publication?.source === Track.Source.ScreenShare
   ) || (isScreenSharing ? tracks[0] : null);
 
   const cameraTracks = isScreenSharing
