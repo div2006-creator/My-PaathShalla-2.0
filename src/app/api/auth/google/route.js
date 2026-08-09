@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server';
 
 export async function GET(request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const role = searchParams.get('role') || 'STUDENT';
 
   const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
   
   const host = request.headers.get('host');
-  const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-  const dynamicBaseUrl = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || origin);
-  const baseUrl = dynamicBaseUrl.replace(/\/$/, '').trim();
+  let baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://my-paath-shalla-2-0.vercel.app').replace(/\/$/, '').trim();
+  if (host?.includes('localhost')) {
+    baseUrl = 'http://localhost:3000';
+  }
+  
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
 
   // If Google OAuth Client ID is missing, provide instant seamless sign-in

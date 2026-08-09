@@ -7,9 +7,10 @@ export async function GET(request) {
   const error = searchParams.get('error');
 
   const host = request.headers.get('host');
-  const proto = request.headers.get('x-forwarded-proto') || (host?.includes('localhost') ? 'http' : 'https');
-  const dynamicBaseUrl = host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || origin);
-  const baseUrl = dynamicBaseUrl.replace(/\/$/, '').trim();
+  let baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://my-paath-shalla-2-0.vercel.app').replace(/\/$/, '').trim();
+  if (host?.includes('localhost')) {
+    baseUrl = 'http://localhost:3000';
+  }
 
   if (error || !code) {
     return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent(error || 'Google login was cancelled')}`);
