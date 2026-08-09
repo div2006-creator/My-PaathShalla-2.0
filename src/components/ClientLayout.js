@@ -96,8 +96,8 @@ export default function ClientLayout({ children }) {
   const toggleRole = () => {
     if (!user) return;
     if (!isTeacherEmail(user.email)) {
-      setAuthModalTitle('Faculty Access Restricted');
-      setAuthModalMessage('Teacher Portal & classroom controls are restricted exclusively to verified faculty email (sharmadiv7880@gmail.com). All other accounts are enrolled as Students.');
+      setAuthModalTitle('Teacher Account Required');
+      setAuthModalMessage('This action requires a Teacher account.');
       setAuthModalTargetRole('TEACHER');
       setAuthModalOpen(true);
       return;
@@ -126,8 +126,8 @@ export default function ClientLayout({ children }) {
   const requireAuth = (callback, roleNeeded = 'STUDENT') => {
     if (isAuthenticated && user) {
       if (roleNeeded === 'TEACHER' && !isTeacherEmail(user.email)) {
-        setAuthModalTitle('Faculty Access Restricted');
-        setAuthModalMessage('Teacher actions (scheduling classes, publishing recordings, managing students) are restricted to verified faculty email (sharmadiv7880@gmail.com). All other accounts are enrolled as Students.');
+        setAuthModalTitle('Teacher Account Required');
+        setAuthModalMessage('This action requires a Teacher account.');
         setAuthModalTargetRole('TEACHER');
         setPendingCallback(() => callback);
         setAuthModalOpen(true);
@@ -136,10 +136,10 @@ export default function ClientLayout({ children }) {
       if (callback) callback();
       return true;
     } else {
-      setAuthModalTitle(roleNeeded === 'TEACHER' ? 'Faculty Sign In Required' : 'Sign In Required');
+      setAuthModalTitle(roleNeeded === 'TEACHER' ? 'Teacher Sign In Required' : 'Sign In Required');
       setAuthModalMessage(
         roleNeeded === 'TEACHER'
-          ? 'Please sign in with Google using verified faculty email (sharmadiv7880@gmail.com) to access Teacher controls.'
+          ? 'Please sign in with Google as a Teacher to access Teacher controls.'
           : 'Please sign in or register with Google to join live classroom sessions.'
       );
       setAuthModalTargetRole(roleNeeded);

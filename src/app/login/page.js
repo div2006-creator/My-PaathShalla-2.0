@@ -129,10 +129,10 @@ export default function LoginPage() {
           <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs space-y-1">
             <div className="flex items-center gap-2 text-indigo-400 font-bold">
               <span className="material-symbols-outlined text-base">verified_user</span>
-              <span>Google Identity & Role Policy</span>
+              <span>Google Identity & Account Verification</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-snug">
-              Teacher Portal access is reserved exclusively for verified faculty (<strong className="text-amber-400">sharmadiv7880@gmail.com</strong>). All other accounts are automatically enrolled as Students.
+              To ensure safety and identity verification, all accounts must be authenticated using a verified Google account.
             </p>
           </div>
 
