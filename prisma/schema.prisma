@@ -60,14 +60,23 @@ model ClassSchedule {
 
 model Recording {
   id             String   @id @default(uuid())
+  classId        String?
+  teacherId      String?
   title          String
   subject        String
   instructorName String
-  duration       String   // e.g. "45:20"
+  duration       String   @default("00:00") // e.g. "45:20"
   views          Int      @default(0)
-  videoUrl       String
-  thumbnailUrl   String
+  videoUrl       String   @default("")
+  thumbnailUrl   String   @default("")
+  roomName       String?
+  egressId       String?
+  storageKey     String?
+  playbackUrl    String?
+  fileSize       Int?     @default(0)
+  status         String   @default("READY") // "STARTING" | "RECORDING" | "PROCESSING" | "READY" | "FAILED" | "STOPPED"
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt @default(now())
 }
 
 model LiveChat {

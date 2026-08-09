@@ -435,10 +435,8 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
   // Recording States (Teacher)
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
-  const [recordingTitle, setRecordingTitle] = useState(`${classSubject}: ${classTopic}`);
-  const [recordingSubject, setRecordingSubject] = useState(classSubject);
-  const [savingRecording, setSavingRecording] = useState(false);
+  const [recordingStatus, setRecordingStatus] = useState('IDLE');
+  const [endModalOpen, setEndModalOpen] = useState(false);
 
   useEffect(() => {
     let timer;
@@ -450,63 +448,66 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
     return () => clearInterval(timer);
   }, [isRecording]);
 
-  const formatTime = (secs) => {
-    const m = Math.floor(secs / 60).toString().padStart(2, '0');
-    const s = (secs % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  };
-
-  const handleStartRecording = () => {
-    setRecordingSeconds(0);
-    setIsRecording(true);
-  };
-
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    setSaveModalOpen(true);
-  };
-
-  const handleSaveRecording = async (e) => {
-    e.preventDefault();
-    setSavingRecording(true);
+  const handleStartRecording = async () => {
+    setRecordingStatus('STARTING');
     try {
-      const res = await fetch('/api/recordings', {
+      const res = await fetch('/api/live/recording/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: recordingTitle,
-          subject: recordingSubject,
+          roomName: activeRoom || 'live-class',
+          title: `${classSubject}: ${classTopic}`,
+          subject: classSubject,
           instructorName: user?.name || 'Faculty Instructor',
-          duration: formatTime(recordingSeconds) || '15:00',
         }),
       });
-
+      const data = await res.json();
       if (res.ok) {
-        alert('Recording published successfully to Class Recordings Library!');
-        setSaveModalOpen(false);
+        setRecordingSeconds(0);
+        setIsRecording(true);
+        setRecordingStatus('RECORDING');
       } else {
-        alert('Failed to save recording');
+        alert(data.error || 'Unable to start recording. Please try again.');
+        setRecordingStatus('IDLE');
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setSavingRecording(false);
+      alert('Unable to start recording. Please try again.');
+      setRecordingStatus('IDLE');
     }
   };
 
-  const handleSendChat = (e) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-    setChats([
-      ...chats,
-      {
-        sender: user?.name || 'Student',
-        role: user?.role || 'STUDENT',
-        text: chatInput,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
-    setChatInput('');
+  const handleStopRecording = async () => {
+    setRecordingStatus('STOPPING');
+    try {
+      const res = await fetch('/api/live/recording/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomName: activeRoom || 'live-class',
+        }),
+      });
+      const data = await res.json();
+      setIsRecording(false);
+      setRecordingStatus('IDLE');
+      if (res.ok) {
+        alert('Class recording stopped and saved to Class Recordings Library (/recordings)!');
+      } else {
+        alert(data.error || 'Failed to stop recording');
+      }
+    } catch (err) {
+      console.error(err);
+      setIsRecording(false);
+      setRecordingStatus('IDLE');
+    }
+  };
+
+  const handleLeaveTrigger = () => {
+    if (user?.role === 'TEACHER') {
+      setEndModalOpen(true);
+    } else {
+      handleLeave();
+    }
   };
 
   const handleLeave = () => {
@@ -515,6 +516,14 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
     } else {
       router.push('/dashboard');
     }
+  };
+
+  const handleConfirmEndClass = async () => {
+    if (isRecording) {
+      await handleStopRecording();
+    }
+    setEndModalOpen(false);
+    handleLeave();
   };
 
   return (
@@ -539,7 +548,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
             document.exitFullscreen();
           }
         }}
-        onLeaveClass={handleLeave}
+        onLeaveClass={handleLeaveTrigger}
         userRole={user?.role || 'STUDENT'}
       />
 
@@ -586,7 +595,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         onToggleScreenShare={() => setIsScreenSharing(!isScreenSharing)}
         captionsEnabled={captionsEnabled}
         onToggleCaptions={() => setCaptionsEnabled(!captionsEnabled)}
-        onLeaveClass={handleLeave}
+        onLeaveClass={handleLeaveTrigger}
       />
 
       {/* 4. MODALS */}
@@ -598,49 +607,33 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
         <DeviceSettingsModal onClose={() => setSettingsOpen(false)} />
       )}
 
-      {/* Teacher Save Recording Modal */}
-      {saveModalOpen && (
+      {/* End Class Confirmation Modal (Teacher) */}
+      {endModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4 text-white">
-            <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-              <h3 className="font-bold text-red-400 text-base">Publish Class Recording</h3>
-              <button onClick={() => setSaveModalOpen(false)} className="text-slate-400 hover:text-white">
-                <span className="material-symbols-outlined">close</span>
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 space-y-4 text-white text-center shadow-2xl">
+            <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto border border-red-500/30">
+              <span className="material-symbols-outlined text-2xl">call_end</span>
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-base text-white">End this live class?</h3>
+              <p className="text-xs text-slate-400">
+                The live session will end for all participants and any active recording will be finalized automatically.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setEndModalOpen(false)}
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmEndClass}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md"
+              >
+                End Class
               </button>
             </div>
-            <form onSubmit={handleSaveRecording} className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-300 mb-1">Recording Title</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
-                  value={recordingTitle}
-                  onChange={(e) => setRecordingTitle(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-slate-300 mb-1">Subject</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none"
-                  value={recordingSubject}
-                  onChange={(e) => setRecordingSubject(e.target.value)}
-                />
-              </div>
-              <div className="p-3 bg-slate-800/50 rounded-xl text-[11px] text-slate-400 space-y-1">
-                <p>Recorded Duration: <strong className="text-white">{formatTime(recordingSeconds)}</strong></p>
-                <p>Instructor: <strong className="text-white">{user?.name || 'Faculty Instructor'}</strong></p>
-              </div>
-              <button
-                type="submit"
-                disabled={savingRecording}
-                className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md mt-2"
-              >
-                {savingRecording ? 'Publishing...' : 'Publish Recording'}
-              </button>
-            </form>
           </div>
         </div>
       )}
