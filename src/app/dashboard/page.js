@@ -332,6 +332,18 @@ function TeacherDashboard({ user, requireAuth }) {
     fetchDashboardData();
   }, []);
 
+  const handleDeleteSchedule = async (classId) => {
+    if (!confirm('Are you sure you want to delete/remove this scheduled class?')) return;
+    try {
+      const res = await fetch(`/api/schedule?id=${classId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setSchedule(schedule.filter(s => s.id !== classId));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   if (loading) return <DashboardSkeleton />;
 
   return (
@@ -393,12 +405,21 @@ function TeacherDashboard({ user, requireAuth }) {
                   <h4 className="font-bold text-white text-sm">{item.topic}</h4>
                   <p className="text-xs text-slate-400">{item.startTime} - {item.endTime} • {item.room}</p>
                 </div>
-                <button
-                  onClick={() => requireAuth(() => { window.location.href = `/live?room=${item.id}`; }, 'TEACHER')}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shrink-0 flex items-center gap-1"
-                >
-                  <span className="material-symbols-outlined text-sm">sensors</span> START CLASS
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleDeleteSchedule(item.id)}
+                    className="p-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-slate-700 transition-colors"
+                    title="Delete Class"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                  <button
+                    onClick={() => requireAuth(() => { window.location.href = `/live?room=${item.id}`; }, 'TEACHER')}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shrink-0 flex items-center gap-1"
+                  >
+                    <span className="material-symbols-outlined text-sm">sensors</span> START CLASS
+                  </button>
+                </div>
               </div>
             ))}
           </div>

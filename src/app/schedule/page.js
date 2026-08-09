@@ -2,26 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/components/ClientLayout';
 
 export default function SchedulePage() {
+  const { user } = useAuth();
   const [filterView, setFilterView] = useState('TODAY'); // TODAY, WEEK, MONTH
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchSchedule() {
-      try {
-        const res = await fetch('/api/schedule');
-        const data = await res.json();
-        setSchedule(data.schedule || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
+  const fetchSchedule = async () => {
+    try {
+      const res = await fetch('/api/schedule');
+      const data = await res.json();
+      setSchedule(data.schedule || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchSchedule();
   }, []);
+
+  const handleDeleteSchedule = async (classId) => {
+    if (!confirm('Are you sure you want to delete this scheduled class?')) return;
+    try {
+      const res = await fetch(`/api/schedule?id=${classId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setSchedule(schedule.filter(s => s.id !== classId));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const isTeacher = user?.role === 'TEACHER';
 
   const fullEvents = schedule.map(s => ({
     id: s.id,
@@ -80,12 +97,24 @@ export default function SchedulePage() {
                 <p className="text-xs text-slate-400">{item.instructor} • {item.room}</p>
               </div>
 
-              <Link
-                href={`/live?subject=${encodeURIComponent(item.title)}`}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shrink-0 flex items-center gap-1"
-              >
-                <span className="material-symbols-outlined text-sm">sensors</span> Join Room
-              </Link>
+              <div className="flex items-center gap-2">
+                {isTeacher && (
+                  <button
+                    onClick={() => handleDeleteSchedule(item.id)}
+                    className="p-2 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-slate-700 transition-colors"
+                    title="Delete Scheduled Class"
+                  >
+                    <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
+                )}
+
+                <Link
+                  href={`/live?room=${item.id}&subject=${encodeURIComponent(item.title)}`}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md shrink-0 flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-sm">sensors</span> Join Room
+                </Link>
+              </div>
             </div>
           ))
         ) : (

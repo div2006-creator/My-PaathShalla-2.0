@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/ClientLayout';
-import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, useTracks } from '@livekit/components-react';
+import { Track } from 'livekit-client';
 import '@livekit/components-styles';
 
 // Modular Live Classroom Components
@@ -76,6 +77,19 @@ export default function LiveClassPage() {
   useEffect(() => {
     fetchSchedule();
   }, []);
+
+  // Delete scheduled class (Teacher)
+  const handleDeleteClass = async (classId) => {
+    if (!confirm('Are you sure you want to delete/remove this scheduled class?')) return;
+    try {
+      const res = await fetch(`/api/schedule?id=${classId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchSchedule();
+      }
+    } catch (e) {
+      console.error('Delete class error:', e);
+    }
+  };
 
   // Fetch LiveKit token when an active room is selected
   useEffect(() => {
@@ -270,13 +284,25 @@ export default function LiveClassPage() {
                     Ready for Broadcast
                   </span>
 
-                  <button
-                    onClick={() => handleStartClass(item)}
-                    className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-sm">sensors</span>
-                    <span>{isTeacher ? 'START LIVE CLASS' : 'JOIN LIVE CLASS'}</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isTeacher && (
+                      <button
+                        onClick={() => handleDeleteClass(item.id)}
+                        className="p-2.5 bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-xl border border-slate-700 transition-colors"
+                        title="Delete Scheduled Class"
+                      >
+                        <span className="material-symbols-outlined text-base">delete</span>
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => handleStartClass(item)}
+                      className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center gap-1.5 active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-sm">sensors</span>
+                      <span>{isTeacher ? 'START LIVE CLASS' : 'JOIN LIVE CLASS'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -382,6 +408,15 @@ export default function LiveClassPage() {
 // Custom Classroom UI Component
 function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic = "Live Class Session", onLeaveRoom }) {
   const router = useRouter();
+
+  // Subscribe to live camera & screen share video tracks via LiveKit hook
+  const tracks = useTracks(
+    [
+      { source: Track.Source.Camera, withPlaceholder: true },
+      { source: Track.Source.ScreenShare, withPlaceholder: false },
+    ],
+    { onlySubscribed: false }
+  );
 
   // Classroom Feature States
   const [chats, setChats] = useState([]);
@@ -509,6 +544,7 @@ function PaathShallaLiveClass({ user, classSubject = "Mathematics", classTopic =
       {/* 2. MAIN STAGE CONTENT (VIDEO GRID + SIDEBAR) */}
       <div className="flex-1 flex overflow-hidden relative">
         <VideoGrid
+          tracks={tracks}
           layoutMode={layoutMode}
           isScreenSharing={isScreenSharing}
           captionsEnabled={captionsEnabled}
