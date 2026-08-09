@@ -125,14 +125,14 @@ export default function LoginPage() {
         {/* Login/Register Card */}
         <div className="w-full bg-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-800 space-y-6">
           
-          {/* Security Notice */}
+          {/* Security & Access Notice */}
           <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs space-y-1">
             <div className="flex items-center gap-2 text-indigo-400 font-bold">
               <span className="material-symbols-outlined text-base">verified_user</span>
-              <span>Google Email Verification Required</span>
+              <span>Google Identity & Role Policy</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-snug">
-              To ensure safety and identity verification, all new accounts must be registered using a verified Google account.
+              Teacher Portal access is reserved exclusively for verified faculty (<strong className="text-amber-400">sharmadiv7880@gmail.com</strong>). All other accounts are automatically enrolled as Students.
             </p>
           </div>
 

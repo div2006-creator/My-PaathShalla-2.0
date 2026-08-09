@@ -89,8 +89,17 @@ export default function ClientLayout({ children }) {
     refreshUser();
   }, [pathname]);
 
+  const isTeacherEmail = (email) => (email || '').trim().toLowerCase() === 'sharmadiv7880@gmail.com';
+
   const toggleRole = () => {
     if (!user) return;
+    if (!isTeacherEmail(user.email)) {
+      setAuthModalTitle('Faculty Access Restricted');
+      setAuthModalMessage('Teacher Portal & classroom controls are restricted exclusively to verified faculty email (sharmadiv7880@gmail.com). All other accounts are enrolled as Students.');
+      setAuthModalTargetRole('TEACHER');
+      setAuthModalOpen(true);
+      return;
+    }
     setUser((prev) => {
       const newRole = prev?.role === 'TEACHER' ? 'STUDENT' : 'TEACHER';
       return { ...prev, role: newRole };
@@ -114,9 +123,9 @@ export default function ClientLayout({ children }) {
 
   const requireAuth = (callback, roleNeeded = 'STUDENT') => {
     if (isAuthenticated && user) {
-      if (roleNeeded === 'TEACHER' && user.role !== 'TEACHER') {
-        setAuthModalTitle('Teacher Account Required');
-        setAuthModalMessage('This action requires a Teacher account. Switch role or sign in with Google as a Teacher.');
+      if (roleNeeded === 'TEACHER' && !isTeacherEmail(user.email)) {
+        setAuthModalTitle('Faculty Access Restricted');
+        setAuthModalMessage('Teacher actions (scheduling classes, publishing recordings, managing students) are restricted to verified faculty email (sharmadiv7880@gmail.com). All other accounts are enrolled as Students.');
         setAuthModalTargetRole('TEACHER');
         setPendingCallback(() => callback);
         setAuthModalOpen(true);
@@ -125,10 +134,10 @@ export default function ClientLayout({ children }) {
       if (callback) callback();
       return true;
     } else {
-      setAuthModalTitle(roleNeeded === 'TEACHER' ? 'Teacher Sign In Required' : 'Sign In Required');
+      setAuthModalTitle(roleNeeded === 'TEACHER' ? 'Faculty Sign In Required' : 'Sign In Required');
       setAuthModalMessage(
         roleNeeded === 'TEACHER'
-          ? 'Please sign in or register with Google as a Teacher to schedule classes or create coursework.'
+          ? 'Please sign in with Google using verified faculty email (sharmadiv7880@gmail.com) to access Teacher controls.'
           : 'Please sign in or register with Google to join live classroom sessions.'
       );
       setAuthModalTargetRole(roleNeeded);

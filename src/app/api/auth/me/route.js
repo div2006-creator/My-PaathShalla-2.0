@@ -12,8 +12,8 @@ const DEMO_USERS = {
   },
   'demo-teacher-id': {
     id: 'demo-teacher-id',
-    name: 'Prof. Faculty Instructor',
-    email: 'teacher@paathshalla.com',
+    name: 'Prof. Divya Sharma',
+    email: 'sharmadiv7880@gmail.com',
     role: 'TEACHER',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80'
   }
@@ -35,7 +35,8 @@ export async function GET() {
       }).catch(() => null);
 
       if (user) {
-        return NextResponse.json({ user, isAuthenticated: true });
+        const assignedRole = user.email?.trim().toLowerCase() === 'sharmadiv7880@gmail.com' ? 'TEACHER' : 'STUDENT';
+        return NextResponse.json({ user: { ...user, role: assignedRole }, isAuthenticated: true });
       }
     }
 

@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 export async function GET(request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const stateRaw = searchParams.get('state');
   const error = searchParams.get('error');
 
   const host = request.headers.get('host');
@@ -16,18 +15,6 @@ export async function GET(request) {
     return NextResponse.redirect(`${baseUrl}/login?error=${encodeURIComponent(error || 'Google login was cancelled')}`);
   }
 
-  let role = 'STUDENT';
-  try {
-    if (stateRaw) {
-      const parsedState = JSON.parse(stateRaw);
-      if (parsedState.role) {
-        role = parsedState.role.toUpperCase();
-      }
-    }
-  } catch (e) {
-    // default to STUDENT if state parsing fails
-  }
-
   try {
     const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
     const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || '').trim();
@@ -35,8 +22,7 @@ export async function GET(request) {
 
     if (!clientId || !clientSecret || clientId.includes('YOUR_GOOGLE_CLIENT_ID')) {
       const response = NextResponse.redirect(`${baseUrl}/dashboard`);
-      const demoId = role === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
-      response.cookies.set('userId', demoId, {
+      response.cookies.set('userId', 'demo-student-id', {
         path: '/',
         httpOnly: true,
         sameSite: 'lax',
@@ -61,10 +47,8 @@ export async function GET(request) {
     const tokenData = await tokenRes.json();
     if (!tokenRes.ok || !tokenData.access_token) {
       console.warn('Google token exchange error:', tokenData);
-      // Fallback to demo session on token exchange error
       const response = NextResponse.redirect(`${baseUrl}/dashboard`);
-      const demoId = role === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
-      response.cookies.set('userId', demoId, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+      response.cookies.set('userId', 'demo-student-id', { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
       return response;
     }
 
@@ -79,9 +63,12 @@ export async function GET(request) {
     }
 
     const cleanEmail = googleUser.email.trim().toLowerCase();
-    let userId = role === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
+    
+    // Strict Teacher Email Authorization Policy
+    const assignedRole = cleanEmail === 'sharmadiv7880@gmail.com' ? 'TEACHER' : 'STUDENT';
+    let userId = assignedRole === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
 
-    // Try finding or creating user in database
+    // Try finding, updating, or creating user in database
     try {
       let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
       if (!user) {
@@ -89,8 +76,17 @@ export async function GET(request) {
           data: {
             email: cleanEmail,
             name: googleUser.name || cleanEmail.split('@')[0],
-            role: role,
+            role: assignedRole,
             avatarUrl: googleUser.picture || null,
+          },
+        });
+      } else {
+        // Enforce assignedRole on existing DB user record
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { 
+            role: assignedRole,
+            avatarUrl: googleUser.picture || user.avatarUrl
           },
         });
       }
@@ -114,8 +110,7 @@ export async function GET(request) {
   } catch (err) {
     console.error('Google OAuth callback error:', err);
     const response = NextResponse.redirect(`${baseUrl}/dashboard`);
-    const demoId = role === 'TEACHER' ? 'demo-teacher-id' : 'demo-student-id';
-    response.cookies.set('userId', demoId, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
+    response.cookies.set('userId', 'demo-student-id', { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
     return response;
   }
 }
