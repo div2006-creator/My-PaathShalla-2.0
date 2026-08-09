@@ -98,7 +98,9 @@ export default function LiveClassPage() {
       setConnecting(true);
       setError('');
       try {
-        const res = await fetch(`/api/live/token?room=${encodeURIComponent(activeRoom)}`);
+        const nameParam = user?.name ? `&name=${encodeURIComponent(user.name)}` : '';
+        const roleParam = user?.role ? `&role=${encodeURIComponent(user.role)}` : '';
+        const res = await fetch(`/api/live/token?room=${encodeURIComponent(activeRoom)}${nameParam}${roleParam}`);
         const data = await res.json();
         if (data.token) {
           setToken(data.token);

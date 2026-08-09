@@ -2,26 +2,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-let inMemoryQna = [
-  {
-    id: 'q-1',
-    author: 'Aarav Mehta',
-    text: 'Does this integral substitution formula hold when x is negative in real domain?',
-    upvotes: 4,
-    answered: true,
-    answer: 'Yes, provided x is within the real domain of definition.',
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
-  },
-  {
-    id: 'q-2',
-    author: 'Ananya Sharma',
-    text: 'Will the lecture recording be available in the Recordings Library right after class?',
-    upvotes: 7,
-    answered: false,
-    answer: '',
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-  }
-];
+let inMemoryQna = [];
 
 export async function GET() {
   return NextResponse.json({ questions: inMemoryQna });
